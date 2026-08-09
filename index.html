@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A secure private digital document locker for your family. Organize, view, download, and print important documents safely.">
+    <title>Family Digital Document Locker</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- App Styling -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Supabase JS Client (v2 CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    
+    <!-- 1. Offline Banner -->
+    <div id="offline-banner" class="offline-banner hidden">
+        <span class="offline-icon">⚠️</span>
+        <span class="offline-text">Unable to connect. Please check your internet connection.</span>
+    </div>
+
+    <!-- 2. Setup Required Screen (Shows when Supabase keys are placeholders) -->
+    <div id="setup-view" class="setup-view hidden">
+        <div class="setup-card">
+            <div class="setup-header">
+                <span class="setup-logo">🗄️</span>
+                <h1>Setup Required</h1>
+            </div>
+            <p>Welcome to the <strong>Family Digital Document Locker</strong>! To get started, you need to configure your Supabase project credentials.</p>
+            <div class="setup-steps">
+                <div class="step">
+                    <h3>1. Edit Supabase Config File</h3>
+                    <p>Open <code class="filepath">js/supabase.js</code> in your editor.</p>
+                </div>
+                <div class="step">
+                    <h3>2. Set Credentials</h3>
+                    <p>Replace the placeholders with your actual Supabase URL and Publishable (anon) API Key:</p>
+                    <pre><code>const SUPABASE_URL = "https://your-project.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
+                </div>
+                <div class="step">
+                    <h3>3. Deploy Tables & Policies</h3>
+                    <p>Copy and run the SQL queries in the <code class="filepath">supabase/</code> folder inside your Supabase SQL Editor.</p>
+                </div>
+            </div>
+            <button onclick="window.location.reload()" class="btn btn-primary">I've configured it, reload</button>
+        </div>
+    </div>
+
+    <!-- 3. Main App Container -->
+    <div id="app-container" class="app-container hidden">
+        
+        <!-- Navigation Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <span class="brand-icon">🗄️</span>
+                <span class="brand-text">Family Locker</span>
+            </div>
+            <div class="header-user-menu" id="header-user-menu">
+                <span class="user-name" id="user-display-name">Loading...</span>
+                <span class="user-role-badge" id="user-role-badge">Member</span>
+                <button id="btn-logout" class="btn btn-outline btn-sm">
+                    <span>Logout</span>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace (Sidebar + Content Pane) -->
+        <div class="workspace">
+            <!-- Sidebar navigation -->
+            <aside class="app-sidebar" id="app-sidebar">
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li>
+                            <a href="#/dashboard" class="nav-item active" id="nav-dashboard">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-only hidden">
+                            <a href="#/upload" class="nav-item" id="nav-upload">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>Upload Document</span>
+                            </a>
+                        </li>
+                        <li class="admin-only hidden">
+                            <a href="#/settings" class="nav-item" id="nav-settings">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <span>Settings & Members</span>
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="sidebar-footer">
+                        <p class="app-version">v1.0.0 (Secure)</p>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="content-pane">
+                
+                <!-- 3a. Dashboard View -->
+                <section id="view-dashboard" class="app-view hidden">
+                    <div class="view-header">
+                        <div>
+                            <h1 id="dashboard-welcome">Welcome, User</h1>
+                            <p class="subtitle">Quickly access family folders and records.</p>
+                        </div>
+                        <div class="admin-only hidden">
+                            <a href="#/upload" class="btn btn-primary">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Upload New</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Bar for Admin -->
+                    <div class="stats-bar admin-only hidden" id="dashboard-stats">
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-members-count">0</span>
+                            <span class="stat-label">Family Members</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-docs-count">0</span>
+                            <span class="stat-label">Documents Locked</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-num" id="stat-storage-size">0 KB</span>
+                            <span class="stat-label">Total Storage</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title-wrapper">
+                        <h2 class="section-title">Family Member Folders</h2>
+                        <span class="badge" id="member-folders-count">0 Folders</span>
+                    </div>
+
+                    <div class="family-members-grid" id="family-members-grid">
+                        <!-- Dynamic member cards will load here -->
+                        <div class="loading-placeholder">Loading family member folders...</div>
+                    </div>
+                </section>
+
+                <!-- 3b. Member Detail View -->
+                <section id="view-member" class="app-view hidden">
+                    <div class="view-header back-header">
+                        <a href="#/dashboard" class="btn-back">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>Back to Folders</span>
+                        </a>
+                        <div class="member-header-info">
+                            <h1 id="member-folder-title">Mother's Documents</h1>
+                            <p class="subtitle" id="member-folder-subtitle">Browse and search documents.</p>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filters Panel -->
+                    <div class="filter-panel">
+                        <div class="search-box">
+                            <svg class="search-icon icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="doc-search-input" placeholder="Search documents by name or category...">
+                        </div>
+                        <div class="category-tabs" id="doc-category-tabs">
+                            <!-- Category tabs will load here -->
+                        </div>
+                    </div>
+
+                    <!-- Documents List grouped by Categories -->
+                    <div class="documents-container" id="documents-container">
+                        <!-- Documents list dynamically inserted here -->
+                        <div class="loading-placeholder">Loading folder documents...</div>
+                    </div>
+                </section>
+
+                <!-- 3c. Upload View (Admin Only) -->
+                <section id="view-upload" class="app-view hidden">
+                    <div class="view-header">
+                        <div>
+                            <h1>Upload Document</h1>
+                            <p class="subtitle">Securely add a document to Supabase storage locker.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-container">
+                        <form id="upload-form" class="card-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="upload-member">Family Member <span class="required">*</span></label>
+                                    <select id="upload-member" required>
+                                        <option value="" disabled selected>Select Family Member...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="upload-category">Category <span class="required">*</span></label>
+                                    <select id="upload-category" required>
+                                        <option value="" disabled selected>Select Category...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="upload-name">Document Name <span class="required">*</span></label>
+                                <input type="text" id="upload-name" placeholder="e.g. Aadhaar Card, College ID Card" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="upload-desc">Description</label>
+                                <textarea id="upload-desc" placeholder="Optional description or details about the document" rows="3"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Select File <span class="required">*</span></label>
+                                <div class="drop-zone" id="file-drop-zone">
+                                    <input type="file" id="upload-file" class="hidden-input" accept=".jpg,.jpeg,.png,.webp,.pdf" required>
+                                    <div class="drop-zone-content">
+                                        <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                        <p class="drop-text-primary">Click to upload or drag and drop</p>
+                                        <p class="drop-text-secondary">Supported: PDF, JPG, PNG, WEBP (Max 50MB)</p>
+                                    </div>
+                                    <div class="drop-zone-selected hidden" id="drop-zone-selected">
+                                        <span class="selected-file-icon" id="selected-file-icon">📄</span>
+                                        <div class="selected-file-details">
+                                            <span class="selected-file-name" id="selected-file-name">filename.pdf</span>
+                                            <span class="selected-file-size" id="selected-file-size">1.2 MB</span>
+                                        </div>
+                                        <button type="button" class="btn-clear-file" id="btn-clear-file">❌</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Compression Info Alert -->
+                            <div id="compression-alert" class="compression-alert hidden">
+                                <span class="alert-icon">⚡</span>
+                                <div class="alert-text">
+                                    <strong>Image Optimization Active:</strong> Huge image auto-compressed to fit quota. 
+                                    <span id="compression-stats">Original: 10MB -> New: 400KB</span>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" id="btn-upload-submit" class="btn btn-primary btn-block">
+                                    <svg class="icon icon-loading hidden" id="upload-loading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke-dasharray="62" stroke-dashoffset="31"></circle></svg>
+                                    <span id="upload-btn-text">Upload Document</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 3d. Settings View (Admin Only) -->
+                <section id="view-settings" class="app-view hidden">
+                    <div class="view-header">
+                        <div>
+                            <h1>Settings & User Management</h1>
+                            <p class="subtitle">Add family members, manage categories, and grant user permissions.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        
+                        <!-- Family Members Management -->
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h2>Family Members</h2>
+                                <button id="btn-show-add-member" class="btn btn-primary btn-sm">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    <span>Add Member</span>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-wrapper">
+                                    <table class="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Member Name</th>
+                                                <th>Display Name</th>
+                                                <th>Status</th>
+                                                <th class="actions-col">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-members-body">
+                                            <!-- Members loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Access Permissions -->
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h2>User Permissions & Access Control</h2>
+                            </div>
+                            <div class="card-body">
+                                <p class="description-text">Map registered user accounts to the family member folders they are allowed to access.</p>
+                                <div class="form-container-inline">
+                                    <form id="permission-form" class="inline-form">
+                                        <select id="perm-user" required>
+                                            <option value="" disabled selected>Select User...</option>
+                                        </select>
+                                        <select id="perm-member" required>
+                                            <option value="" disabled selected>Select Family Folder...</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">Grant Access</button>
+                                    </form>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table class="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>User Email</th>
+                                                <th>Role</th>
+                                                <th>Folder Access</th>
+                                                <th class="actions-col">Revoke</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-permissions-body">
+                                            <!-- Permissions loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categories Management -->
+                        <div class="settings-card">
+                            <div class="card-header">
+                                <h2>Document Categories</h2>
+                                <button id="btn-show-add-category" class="btn btn-primary btn-sm">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    <span>Add Category</span>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-wrapper">
+                                    <table class="settings-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Category Name</th>
+                                                <th>Description</th>
+                                                <th class="actions-col">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-categories-body">
+                                            <!-- Categories loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 4. Authenticating / Logging-In Screen (Standard credentials UI) -->
+    <div id="login-view" class="login-view hidden">
+        <div class="login-card">
+            <div class="login-logo-wrapper">
+                <span class="login-logo">🗄️</span>
+                <h2>Family Document Locker</h2>
+                <p>Private Digital Repository</p>
+            </div>
+            
+            <!-- Tab switches (Login / Sign Up) -->
+            <div class="login-tabs">
+                <button class="login-tab-btn active" id="tab-login-btn">Login</button>
+                <button class="login-tab-btn" id="tab-signup-btn">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="Enter family email..." required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password..." required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <svg class="icon icon-loading hidden" id="login-loading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke-dasharray="62" stroke-dashoffset="31"></circle></svg>
+                    <span id="login-btn-text">Login</span>
+                </button>
+                <div class="auth-helper">
+                    <a href="#" id="link-forgot-password">Forgot Password?</a>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signup-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" placeholder="e.g. John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="Enter your email..." required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Min 6 characters..." required>
+                </div>
+                <div class="signup-tip-alert">
+                    💡 <strong>Setup Tip:</strong> The very first user to sign up will be assigned the <strong>Admin</strong> role automatically. All subsequent signups default to member accounts.
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <svg class="icon icon-loading hidden" id="signup-loading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke-dasharray="62" stroke-dashoffset="31"></circle></svg>
+                    <span id="signup-btn-text">Register Account</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Modals Area -->
+
+    <!-- A. Document Details Modal / Viewer -->
+    <div id="modal-doc-viewer" class="modal modal-doc hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-wrapper">
+            <div class="modal-header">
+                <div>
+                    <h2 id="view-doc-title">Document View</h2>
+                    <p class="subtitle" id="view-doc-meta">Category • Size • By User</p>
+                </div>
+                <button class="btn-close-modal" id="btn-close-viewer">❌</button>
+            </div>
+            <div class="modal-body-scroll">
+                
+                <!-- Description -->
+                <p id="view-doc-desc" class="doc-view-description"></p>
+
+                <!-- Document Preview Container -->
+                <div class="doc-preview-area" id="doc-preview-area">
+                    <!-- Loaded dynamically (Image/PDF object) -->
+                    <div class="loading-placeholder">Generating secure temporary link...</div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button id="btn-doc-open-tab" class="btn btn-outline">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    <span>Open in Tab</span>
+                </button>
+                <div class="footer-actions-group">
+                    <button id="btn-doc-print" class="btn btn-outline">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        <span>Print</span>
+                    </button>
+                    <button id="btn-doc-download" class="btn btn-primary">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Download</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- B. Add/Edit Family Member Modal -->
+    <div id="modal-member-form" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-wrapper modal-sm">
+            <div class="modal-header">
+                <h2 id="member-modal-title">Add Family Member</h2>
+                <button class="btn-close-modal" id="btn-close-member-modal">❌</button>
+            </div>
+            <form id="member-form">
+                <input type="hidden" id="member-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="member-name">Name <span class="required">*</span></label>
+                        <input type="text" id="member-name" placeholder="e.g. Mother, Father, Brother" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="member-display">Display Label / Emoji</label>
+                        <input type="text" id="member-display" placeholder="e.g. 👩 Mother, 👨 Father, 👤 Brother">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-member-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- C. Add Category Modal -->
+    <div id="modal-category-form" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-wrapper modal-sm">
+            <div class="modal-header">
+                <h2>Add Document Category</h2>
+                <button class="btn-close-modal" id="btn-close-category-modal">❌</button>
+            </div>
+            <form id="category-form">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="category-name">Category Name <span class="required">*</span></label>
+                        <input type="text" id="category-name" placeholder="e.g. Medical, Taxes" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category-desc">Description</label>
+                        <input type="text" id="category-desc" placeholder="Optional brief description">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-category-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- D. Generic Action Confirmation Dialog -->
+    <div id="modal-confirm" class="modal modal-dialog hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-wrapper modal-xs">
+            <div class="modal-header">
+                <h2 id="confirm-title">Delete Document?</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-confirm-cancel">Cancel</button>
+                <button class="btn btn-danger" id="btn-confirm-ok">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Interactive Toast Notification Center -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- App Logic Scripts (Module or normal defer) -->
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/documents.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/members.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

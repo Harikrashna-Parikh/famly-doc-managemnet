@@ -1,0 +1,1574 @@
+# Project: Family Digital Document Locker
+
+Build a complete, production-quality but simple **Family Digital Document Locker** as a static web application.
+
+The application is intended for a small private family use case where important documents such as ID cards, certificates, marksheets, licenses, insurance documents, etc. can be securely uploaded once and accessed later from a simple website.
+
+---
+
+# 1. ABSOLUTE REQUIREMENTS
+
+This project MUST satisfy all of the following:
+
+* Frontend only
+* Plain HTML
+* Plain CSS
+* Vanilla JavaScript
+* Supabase as the backend service
+* GitHub Pages as the ONLY hosting platform for the frontend
+* Supabase Free Plan only
+* Supabase Authentication
+* Supabase PostgreSQL database
+* Supabase Private Storage bucket
+* Row Level Security (RLS)
+* Storage access policies
+* Signed URLs for viewing/downloading files
+* No custom backend server
+* No Node.js backend
+* No Express
+* No PHP
+* No Python backend
+* No Spring Boot
+* No Firebase
+* No paid third-party services
+* No requirement for a credit card or paid Supabase plan
+
+The final application must be deployable as static files to GitHub Pages.
+
+Do not introduce unnecessary frameworks or build systems.
+
+---
+
+# 2. MAIN PURPOSE
+
+The application is a private family document locker.
+
+Example family:
+
+* Me
+* Mother
+* Father
+* Brother
+* Sister
+
+Documents may include:
+
+* Aadhaar Card
+* PAN Card
+* College ID
+* Driving License
+* Passport
+* Marksheet
+* Degree Certificate
+* Insurance
+* Medical documents
+* Vehicle documents
+* Other important documents
+
+The user should be able to organize documents by family member and category.
+
+---
+
+# 3. SINGLE WEBSITE
+
+Do NOT create two separate websites.
+
+Create one GitHub Pages application.
+
+Example:
+
+https://USERNAME.github.io/family-documents/
+
+The same application should handle:
+
+* Login
+* Dashboard
+* Family members
+* Document browsing
+* Document viewing
+* Download
+* Printing
+* Admin document upload
+* Admin document management
+
+The UI shown should depend on the authenticated user's role.
+
+---
+
+# 4. USER ROLES
+
+Implement two roles:
+
+## Admin
+
+Admin can:
+
+* Login
+* View all family members
+* Add family members
+* Edit family members
+* Delete/deactivate family members
+* Create categories
+* Upload documents
+* Rename documents
+* Move documents between categories
+* Delete documents
+* View documents
+* Download documents
+* Print documents
+
+## Family Member
+
+Family members can:
+
+* Login
+* See their permitted documents
+* Browse categories
+* View documents
+* Download documents
+* Print documents
+
+Family members MUST NOT be able to:
+
+* Upload
+* Delete
+* Rename
+* Move documents
+* Manage users
+* Manage categories
+
+---
+
+# 5. AUTHENTICATION
+
+Use Supabase Authentication.
+
+Use email/password authentication initially.
+
+Do NOT create custom authentication.
+
+Do NOT store passwords in the application database.
+
+Use Supabase Auth for:
+
+* Sign up / initial user creation
+* Login
+* Logout
+* Session management
+* Password reset if practical
+
+The application must check the authenticated Supabase session before showing protected pages.
+
+If the user is not authenticated:
+
+Show:
+
+```text
+Family Document Locker
+
+Email
+[________________________]
+
+Password
+[________________________]
+
+[ Login ]
+
+Forgot Password?
+```
+
+After successful login, redirect to the dashboard.
+
+---
+
+# 6. SECURITY MODEL
+
+This is extremely important because the application stores potentially sensitive personal documents.
+
+Do NOT make the storage bucket public.
+
+Create a PRIVATE Supabase Storage bucket.
+
+Never expose documents through permanent public URLs.
+
+Use Supabase Storage signed URLs for temporary access.
+
+The browser should request access only after the user is authenticated and authorized.
+
+Architecture:
+
+```text
+User
+ ↓
+Supabase Auth
+ ↓
+Authenticated Session
+ ↓
+PostgreSQL RLS
+ ↓
+Storage Access Policy
+ ↓
+Generate temporary signed URL
+ ↓
+View / Download / Print
+```
+
+Never use the Supabase Service Role Key in frontend JavaScript.
+
+NEVER put:
+
+```text
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+in the frontend.
+
+Only the public Supabase URL and publishable/anon key may be used in the static frontend.
+
+---
+
+# 7. SUPABASE FREE PLAN REQUIREMENT
+
+The project MUST remain compatible with the Supabase Free plan.
+
+Do not use paid-only Supabase features.
+
+Current target limits include approximately:
+
+* 1 GB file storage
+* 500 MB database
+* 5 GB egress
+* 50,000 monthly active users
+* 2 active free projects
+
+Design the application so that a small family can comfortably operate within these limits.
+
+Do not require upgrading to Pro.
+
+Do not require entering a credit card.
+
+If a feature would require a paid plan, do not implement it. Find a Free-plan-compatible alternative.
+
+---
+
+# 8. DATABASE DESIGN
+
+Use PostgreSQL through Supabase.
+
+Create the following tables.
+
+## profiles
+
+```text
+id
+user_id
+full_name
+email
+role
+is_active
+created_at
+updated_at
+```
+
+Roles:
+
+```text
+admin
+member
+```
+
+The `user_id` should reference the Supabase Auth user.
+
+---
+
+## family_members
+
+```text
+id
+name
+display_name
+is_active
+created_at
+updated_at
+```
+
+Example:
+
+```text
+1 | Mother
+2 | Father
+3 | Me
+4 | Brother
+```
+
+---
+
+## member_access
+
+This table determines which authenticated users can access which family member's documents.
+
+```text
+id
+user_id
+family_member_id
+created_at
+```
+
+This allows the system to support:
+
+```text
+Mother's account → Mother documents
+
+Father's account → Father documents
+
+Admin → All documents
+```
+
+---
+
+## categories
+
+```text
+id
+name
+description
+created_at
+updated_at
+```
+
+Examples:
+
+```text
+Identity
+Education
+Vehicle
+Insurance
+Property
+Financial
+Other
+```
+
+---
+
+## documents
+
+```text
+id
+family_member_id
+category_id
+name
+description
+storage_path
+file_name
+file_type
+file_size
+created_at
+updated_at
+created_by
+```
+
+Example:
+
+```text
+name:
+College ID Card
+
+family_member:
+Me
+
+category:
+Education
+
+storage_path:
+documents/{family_member_id}/{document_id}/college-id.jpg
+```
+
+---
+
+# 9. STORAGE STRUCTURE
+
+Create ONE private Storage bucket:
+
+```text
+documents
+```
+
+Use paths like:
+
+```text
+documents/{familyMemberId}/{documentId}/{filename}
+```
+
+Example:
+
+```text
+documents/
+  123/
+    987/
+      aadhaar-front.jpg
+
+documents/
+  123/
+    654/
+      college-id.jpg
+
+documents/
+  456/
+    321/
+      driving-license.pdf
+```
+
+Do NOT create an unlimited number of Storage buckets.
+
+Use one private bucket with organized paths.
+
+---
+
+# 10. STORAGE SECURITY
+
+Storage MUST be private.
+
+Do not use:
+
+```javascript
+getPublicUrl()
+```
+
+for private documents.
+
+Instead use signed URLs.
+
+For example, conceptually:
+
+```javascript
+const { data, error } =
+  await supabase.storage
+    .from('documents')
+    .createSignedUrl(storagePath, 300);
+```
+
+Use a short expiry such as 5 minutes where appropriate.
+
+The application should generate a fresh signed URL whenever a document needs to be viewed/downloaded.
+
+Do not permanently store signed URLs in the database.
+
+Store only:
+
+```text
+storage_path
+```
+
+in the database.
+
+---
+
+# 11. RLS SECURITY
+
+Enable Row Level Security on every application table that contains user/data information.
+
+Do not rely only on JavaScript checks.
+
+Security must be enforced by PostgreSQL RLS.
+
+At minimum:
+
+## Admin
+
+Admin can:
+
+* SELECT all relevant records
+* INSERT
+* UPDATE
+* DELETE
+
+## Family Member
+
+A family member can only SELECT:
+
+* Their own profile
+* Family member records they are authorized to access
+* Documents belonging to their authorized family members
+* Relevant categories
+
+Family members cannot modify documents.
+
+IMPORTANT:
+
+The authorization must be enforced at the database level.
+
+Do not simply hide buttons in JavaScript and consider that security.
+
+---
+
+# 12. STORAGE RLS
+
+Create Storage policies that prevent unauthorized access.
+
+A user should only be able to access files if:
+
+1. They are authenticated.
+2. They are an admin OR
+3. They have access to the corresponding family member.
+
+Storage paths should be designed so that the policy can determine the family member ID.
+
+Do not allow anonymous uploads.
+
+Do not allow anonymous downloads.
+
+Do not allow anonymous deletes.
+
+---
+
+# 13. ADMIN DASHBOARD
+
+Create a clean responsive dashboard.
+
+Example:
+
+```text
+Family Document Locker
+
+Welcome, Admin
+
+----------------------------------
+
+Family Members
+
+[ + Add Member ]
+
+┌─────────────────────────┐
+│ 👩 Mother               │
+│ 12 Documents            │
+│                         │
+│ [ Open ]                │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ 👨 Father               │
+│ 8 Documents             │
+│                         │
+│ [ Open ]                │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ 👤 Me                   │
+│ 15 Documents            │
+│                         │
+│ [ Open ]                │
+└─────────────────────────┘
+```
+
+---
+
+# 14. FAMILY MEMBER MANAGEMENT
+
+Admin should be able to:
+
+```text
+[ + Add Family Member ]
+```
+
+Form:
+
+```text
+Name
+[________________]
+
+Display Name
+[________________]
+
+[ Save ]
+```
+
+Allow editing and deactivating members.
+
+Do not permanently delete a family member if documents are attached unless the user explicitly confirms the operation.
+
+Prefer an `is_active` flag.
+
+---
+
+# 15. DOCUMENT UPLOAD
+
+Admin should have an easy upload form.
+
+Example:
+
+```text
+Upload Document
+--------------------------------
+
+Family Member
+[ Mother ▼ ]
+
+Category
+[ Identity ▼ ]
+
+Document Name
+[ Aadhaar Card ]
+
+Description
+[ Optional description ]
+
+Select File
+[ Choose File ]
+
+Selected:
+aadhaar-front.jpg
+2.1 MB
+
+[ Upload Document ]
+```
+
+The Family Member dropdown is REQUIRED.
+
+This directly satisfies the requirement:
+
+> "Whose document am I uploading?"
+
+---
+
+# 16. SUPPORTED FILE TYPES
+
+Initially support:
+
+Images:
+
+```text
+JPG
+JPEG
+PNG
+WEBP
+```
+
+Documents:
+
+```text
+PDF
+```
+
+Reject unsupported file types.
+
+Also validate MIME type and file extension.
+
+Maximum file size:
+
+```text
+50 MB
+```
+
+However, recommend smaller files for normal documents.
+
+Show a helpful message if the file is too large.
+
+---
+
+# 17. IMAGE OPTIMIZATION
+
+Because the application uses the Free plan's 1 GB Storage quota, optimize images before upload where practical.
+
+For large images:
+
+* Resize client-side if reasonable
+* Preserve readable document text
+* Convert unnecessarily huge photos to JPEG/WebP where appropriate
+* Do not reduce quality so much that document text becomes unreadable
+
+Do NOT modify PDFs.
+
+Show the estimated final file size before upload when possible.
+
+---
+
+# 18. DOCUMENT CATEGORIES
+
+Provide default categories:
+
+```text
+Identity
+Education
+Vehicle
+Insurance
+Property
+Financial
+Other
+```
+
+Admin should be able to create additional categories.
+
+Example:
+
+```text
+[ + Add Category ]
+```
+
+---
+
+# 19. DOCUMENT LIST
+
+When opening a family member:
+
+```text
+Mother
+
+[ Search Documents ]
+
+Categories:
+
+Identity
+----------------
+🪪 Aadhaar Card
+🪪 PAN Card
+
+Insurance
+----------------
+📄 Health Insurance
+
+Other
+----------------
+📄 Important Document
+```
+
+Show:
+
+* Document name
+* Category
+* File type
+* File size
+* Date added
+
+---
+
+# 20. SEARCH
+
+Add a simple client-side/server-side search.
+
+Search by:
+
+* Document name
+* Category
+* Family member
+
+Example:
+
+```text
+🔍 Search documents...
+```
+
+Keep it simple and efficient.
+
+---
+
+# 21. DOCUMENT VIEWER
+
+When the user clicks a document:
+
+For image:
+
+```text
+--------------------------------
+College ID Card
+
+[ Large Image Preview ]
+
+[ Download ] [ Print ]
+
+--------------------------------
+```
+
+For PDF:
+
+Display the PDF using a browser-compatible viewer or iframe/object where appropriate.
+
+Provide:
+
+```text
+[ Open ]
+[ Download ]
+[ Print ]
+```
+
+The signed URL should be generated only when needed.
+
+---
+
+# 22. DOWNLOAD
+
+The Download button should:
+
+1. Verify user authentication.
+2. Verify user authorization.
+3. Generate a temporary signed URL.
+4. Trigger the browser download.
+
+Do not expose a permanent public URL.
+
+Use a sensible filename.
+
+Example:
+
+```text
+College-ID-Card.jpg
+```
+
+---
+
+# 23. PRINT
+
+Provide a Print button.
+
+For images:
+
+Create a clean print layout containing:
+
+* Document name
+* Image
+* Optional metadata
+
+Do not print the application's navigation/sidebar/buttons.
+
+Use CSS:
+
+```css
+@media print {
+  ...
+}
+```
+
+For PDFs:
+
+Use browser PDF printing behavior where practical.
+
+Do not send documents to an external printing service.
+
+---
+
+# 24. MOBILE-FIRST DESIGN
+
+This application will frequently be used on mobile phones.
+
+The UI MUST be responsive.
+
+Optimize for:
+
+```text
+Mobile
+Tablet
+Desktop
+```
+
+Mobile requirements:
+
+* Large touch targets
+* Simple navigation
+* Easy upload
+* Easy document viewing
+* Easy download
+* Easy print/share behavior
+* No horizontal scrolling
+
+---
+
+# 25. DESIGN
+
+Use a clean modern document-management interface.
+
+Do not use excessive animations.
+
+Prefer:
+
+* Cards
+* Rounded corners
+* Clear typography
+* Simple icons
+* Good spacing
+* Responsive layout
+* Accessible buttons
+
+Keep the design professional but simple.
+
+No external CSS framework is required.
+
+Use CSS variables for colors and spacing.
+
+---
+
+# 26. NAVIGATION
+
+Recommended structure:
+
+```text
+Login
+  ↓
+Dashboard
+  ↓
+Family Member
+  ↓
+Category
+  ↓
+Document
+  ↓
+View / Download / Print
+```
+
+Admin navigation:
+
+```text
+Dashboard
+Family Members
+Categories
+Documents
+Upload
+Settings
+Logout
+```
+
+Family member navigation:
+
+```text
+My Documents
+Logout
+```
+
+---
+
+# 27. ERROR HANDLING
+
+Handle all important errors gracefully.
+
+Examples:
+
+* Invalid login
+* Wrong password
+* Session expired
+* Unauthorized document
+* File too large
+* Unsupported file type
+* Upload failed
+* Download failed
+* Signed URL generation failed
+* Network error
+* Document not found
+* Supabase unavailable
+
+Do not expose technical stack traces to normal users.
+
+Show friendly messages.
+
+Example:
+
+```text
+Unable to load this document.
+Please try again.
+```
+
+---
+
+# 28. LOADING STATES
+
+Every network operation should have a loading state.
+
+Examples:
+
+```text
+Uploading...
+
+Saving...
+
+Loading documents...
+
+Generating secure link...
+
+Deleting...
+```
+
+Prevent duplicate button clicks while operations are running.
+
+---
+
+# 29. CONFIRMATIONS
+
+Before destructive actions:
+
+```text
+Delete "College ID Card"?
+
+This action cannot be undone.
+
+[ Cancel ] [ Delete ]
+```
+
+For deleting a document:
+
+1. Delete Storage file.
+2. Delete database record.
+
+Handle failures carefully.
+
+If Storage deletion succeeds but database deletion fails, show an error and make the state recoverable.
+
+---
+
+# 30. FIREBASE IS NOT ALLOWED
+
+Do not use Firebase at all.
+
+The backend must be:
+
+```text
+Supabase
+```
+
+Only.
+
+---
+
+# 31. GITHUB PAGES COMPATIBILITY
+
+The application must work from a GitHub Pages subpath.
+
+Example:
+
+```text
+https://username.github.io/family-documents/
+```
+
+Do not assume the application is hosted at:
+
+```text
+https://username.github.io/
+```
+
+Use relative paths correctly.
+
+Do not use server-side routing that requires rewrite rules.
+
+If multiple views/pages are required, prefer simple HTML files or hash/query based routing that works on GitHub Pages.
+
+The app must work after directly opening the GitHub Pages URL.
+
+---
+
+# 32. PROJECT STRUCTURE
+
+Prefer this structure:
+
+```text
+family-document-locker/
+│
+├── index.html
+├── css/
+│   └── styles.css
+│
+├── js/
+│   ├── app.js
+│   ├── supabase.js
+│   ├── auth.js
+│   ├── dashboard.js
+│   ├── documents.js
+│   ├── upload.js
+│   ├── members.js
+│   └── utils.js
+│
+├── assets/
+│   └── ...
+│
+├── supabase/
+│   ├── schema.sql
+│   ├── rls.sql
+│   └── storage-policies.sql
+│
+└── README.md
+```
+
+Keep JavaScript modular and readable.
+
+---
+
+# 33. SUPABASE CONFIGURATION
+
+Create:
+
+```text
+js/supabase.js
+```
+
+with placeholders:
+
+```javascript
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+```
+
+Do NOT put the service-role key anywhere in the repository.
+
+README must clearly explain:
+
+* Where to find Supabase URL
+* Where to find the publishable/anon key
+* Which key is safe for frontend use
+* Which key must NEVER be exposed
+
+---
+
+# 34. SUPABASE SETUP DOCUMENTATION
+
+Create a complete README.
+
+Include:
+
+## Step 1
+
+Create a Supabase account.
+
+Mention that the project should remain on the Free plan.
+
+Do not instruct the user to add a payment method.
+
+## Step 2
+
+Create a new Supabase project.
+
+## Step 3
+
+Create the database tables.
+
+Provide the SQL files.
+
+## Step 4
+
+Enable RLS.
+
+## Step 5
+
+Apply RLS policies.
+
+## Step 6
+
+Create the private Storage bucket:
+
+```text
+documents
+```
+
+Make sure the bucket is PRIVATE.
+
+## Step 7
+
+Apply Storage policies.
+
+## Step 8
+
+Configure Authentication.
+
+Enable:
+
+```text
+Email/Password
+```
+
+## Step 9
+
+Create the first Admin user.
+
+Explain how to assign the admin role safely.
+
+## Step 10
+
+Configure GitHub Pages.
+
+---
+
+# 35. FIRST ADMIN SETUP
+
+Because there is no backend, provide a safe initial setup procedure.
+
+Do NOT hardcode an admin email/password in JavaScript.
+
+Instead:
+
+1. Create the first user through Supabase Auth.
+2. Create/update their profile row.
+3. Set:
+
+```text
+role = 'admin'
+```
+
+Explain this process clearly in README.
+
+---
+
+# 36. DATABASE SECURITY
+
+The SQL should:
+
+* Enable RLS
+* Add appropriate foreign keys
+* Add indexes where useful
+* Use UUID primary keys where appropriate
+* Use timestamps
+* Avoid unnecessary duplicated data
+
+Use database constraints where practical.
+
+---
+
+# 37. STORAGE SECURITY
+
+Create policies for:
+
+### SELECT / READ
+
+Authenticated users only.
+
+User must be:
+
+* Admin, OR
+* Authorized for the family member represented by the storage path.
+
+### INSERT
+
+Admin only.
+
+### UPDATE
+
+Admin only.
+
+### DELETE
+
+Admin only.
+
+No anonymous access.
+
+---
+
+# 38. SECURITY AUDIT
+
+Before finishing the project, perform a security review.
+
+Explicitly verify:
+
+* No service-role key in frontend
+* No public Storage bucket
+* No public document URLs
+* RLS enabled on all relevant tables
+* Storage policies exist
+* Anonymous users cannot read documents
+* Anonymous users cannot upload
+* Family members cannot access unauthorized family documents
+* Family members cannot delete documents
+* Family members cannot modify documents
+* Signed URLs are temporary
+* Passwords are handled only by Supabase Auth
+* Sensitive data is not logged to console
+* File type and size are validated
+
+---
+
+# 39. IMPORTANT PRIVACY REQUIREMENT
+
+This is a personal family document application.
+
+Do not:
+
+* Send documents to analytics services
+* Upload documents to external AI services
+* Use third-party image processing services
+* Embed documents in third-party tracking systems
+* Add advertising
+* Add unnecessary external dependencies
+
+Documents should remain inside Supabase Storage.
+
+---
+
+# 40. NO ANALYTICS
+
+Do not add Google Analytics, Firebase Analytics, Mixpanel, Hotjar, Clarity, or any tracking system.
+
+This application is private.
+
+---
+
+# 41. NO EXTERNAL BACKEND
+
+The only backend service should be Supabase.
+
+The frontend communicates directly with Supabase.
+
+Architecture:
+
+```text
+GitHub Pages
+     │
+     ▼
+HTML/CSS/JS
+     │
+     ▼
+Supabase
+ ┌───┼────────────┐
+ │   │            │
+Auth Database   Storage
+```
+
+---
+
+# 42. OFFLINE BEHAVIOR
+
+Offline support is NOT required for the first version.
+
+If the network is unavailable:
+
+```text
+Unable to connect.
+Please check your internet connection.
+```
+
+Do not cache sensitive documents in browser local storage.
+
+Do not store documents in:
+
+```text
+localStorage
+sessionStorage
+IndexedDB
+```
+
+unless absolutely necessary.
+
+---
+
+# 43. DOCUMENT METADATA
+
+Store only useful metadata in the database.
+
+Example:
+
+```text
+Document ID
+Family Member
+Category
+Name
+Description
+Storage Path
+File Name
+File Type
+File Size
+Created At
+Updated At
+Created By
+```
+
+Do not store file binary data in PostgreSQL.
+
+Files belong in Storage.
+
+---
+
+# 44. FILE NAMING
+
+Generate safe storage paths.
+
+Do not trust user-provided filenames as Storage paths.
+
+Example:
+
+```text
+documents/
+{memberId}/
+{documentId}/
+original-file-name.jpg
+```
+
+Sanitize filenames.
+
+Prevent path traversal.
+
+---
+
+# 45. USER EXPERIENCE
+
+The application should feel extremely simple.
+
+A family member should be able to:
+
+```text
+Login
+ ↓
+Choose Mother
+ ↓
+Choose Identity
+ ↓
+Click Aadhaar
+ ↓
+View
+ ↓
+Download / Print
+```
+
+No technical knowledge should be required.
+
+---
+
+# 46. ADMIN EXPERIENCE
+
+Admin should be able to:
+
+```text
+Login
+ ↓
+Upload Document
+ ↓
+Select Family Member
+ ↓
+Select Category
+ ↓
+Enter Document Name
+ ↓
+Choose File
+ ↓
+Upload
+ ↓
+Done
+```
+
+Make the upload process as simple as possible.
+
+---
+
+# 47. README MUST INCLUDE SECURITY WARNING
+
+Clearly explain:
+
+This application is intended for personal/family use.
+
+Even though private Storage, Auth, RLS and signed URLs are implemented, users should maintain a separate backup of irreplaceable original documents.
+
+The Supabase Free plan does not provide the same backup/recovery features as paid plans.
+
+Do not describe the application as a certified banking-grade or HIPAA-compliant system.
+
+---
+
+# 48. FINAL ACCEPTANCE TEST
+
+Before considering the project complete, verify the following exact scenario.
+
+## Admin test
+
+1. Admin logs in.
+2. Admin sees dashboard.
+3. Admin creates:
+
+```text
+Mother
+Father
+Me
+```
+
+4. Admin creates categories.
+5. Admin uploads a JPG for Mother.
+6. Admin uploads a PDF for Father.
+7. Admin uploads an image for Me.
+8. Documents appear in the correct member folders.
+9. Admin can view them.
+10. Admin can download them.
+11. Admin can print them.
+12. Admin can delete a document.
+
+## Family member test
+
+Create a family member account.
+
+1. Login.
+2. Only authorized documents appear.
+3. Unauthorized family documents are not visible.
+4. Family member can view authorized documents.
+5. Family member can download.
+6. Family member can print.
+7. Family member cannot upload.
+8. Family member cannot delete.
+9. Family member cannot modify documents.
+10. Logging out removes access.
+
+## Anonymous test
+
+Open the GitHub Pages URL without logging in.
+
+Verify:
+
+```text
+No documents visible.
+No documents downloadable.
+No upload available.
+No private Storage files accessible.
+```
+
+---
+
+# 49. IMPORTANT: DO NOT JUST GENERATE CODE
+
+Before implementing, first reason through:
+
+1. Database schema
+2. Authentication model
+3. RLS policies
+4. Storage path structure
+5. Storage policies
+6. Signed URL flow
+7. Admin/member authorization
+8. GitHub Pages limitations
+
+Then implement.
+
+If there is a conflict between convenience and security, choose security.
+
+Do not weaken RLS just to make the frontend work.
+
+---
+
+# 50. DELIVERABLES
+
+Produce:
+
+1. Complete working source code.
+2. Supabase SQL schema.
+3. RLS policies.
+4. Storage policies.
+5. README with complete setup instructions.
+6. GitHub Pages deployment instructions.
+7. Supabase Free-plan setup instructions.
+8. Initial admin setup instructions.
+9. Security checklist.
+10. Clear explanation of how signed URLs work.
+
+The final result should be a clean, responsive, secure, family-friendly document locker that can be deployed directly to GitHub Pages and operate using only the Supabase Free plan.
+
+The final architecture must remain:
+
+```text
+             GitHub Pages
+                   │
+                   ▼
+       Family Document Locker
+          HTML/CSS/JS only
+                   │
+                   ▼
+              Supabase
+       ┌───────────┼───────────┐
+       │           │           │
+      Auth      PostgreSQL   Storage
+                  + RLS      Private
+                               │
+                               ▼
+                         Signed URLs
+                               │
+                    ┌──────────┼──────────┐
+                    ▼          ▼          ▼
+                  View      Download     Print
+```
+
+Do not introduce paid services, a custom backend, Firebase, or a requirement for credit-card billing.
