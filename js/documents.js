@@ -380,18 +380,9 @@ const documents = {
             return;
         }
 
-        // For images: build a clean print layout
+        // For images: build a clean print layout containing only the document image
         printSection.innerHTML = `
-            <div class="print-header">
-                <div class="print-title">🗄️ Family Document Locker</div>
-                <div class="print-meta">
-                    <p><strong>${docName}</strong></p>
-                    <p>${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                </div>
-            </div>
-            <div class="print-body">
-                <img class="print-image" src="${signedUrl}" alt="${docName}">
-            </div>
+            <img class="print-image" src="${signedUrl}" alt="${docName}">
         `;
 
         window.print();

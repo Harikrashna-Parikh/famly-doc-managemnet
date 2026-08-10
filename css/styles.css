@@ -1434,6 +1434,10 @@ textarea {
    13. Print Adjustments
    -------------------------------------------------------------------------- */
 @media print {
+    @page {
+        margin: 0;
+    }
+    
     /* Hide everything on the screen */
     body * {
         visibility: hidden;
@@ -1446,42 +1450,25 @@ textarea {
     }
     
     #print-section {
-        display: block !important;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
         position: absolute;
         left: 0;
         top: 0;
-        width: 100%;
+        width: 100vw;
+        height: 100vh;
         color: #000;
         background-color: #fff;
-    }
-    
-    .print-header {
-        border-bottom: 2px solid #000;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .print-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        font-family: var(--font-sans);
-    }
-    
-    .print-meta {
-        font-size: 0.9rem;
-        color: #555;
-    }
-    
-    .print-body {
-        text-align: center;
+        padding: 0;
+        margin: 0;
     }
     
     .print-image {
         max-width: 100%;
-        max-height: 80vh;
+        max-height: 100%;
         object-fit: contain;
+        display: block;
+        page-break-inside: avoid;
     }
 }
