@@ -35,8 +35,21 @@ CREATE POLICY "Read documents based on family member access"
     ON storage.objects FOR SELECT TO authenticated
     USING (
         bucket_id = 'documents' AND (
-            public.is_admin(auth.uid()) OR
-            public.has_member_access(auth.uid(), public.safe_uuid(split_part(name, '/', 1)))
+            -- User is admin
+            EXISTS (
+                SELECT 1 FROM public.profiles
+                WHERE public.profiles.user_id = auth.uid()
+                  AND public.profiles.role = 'admin'
+                  AND public.profiles.is_active = true
+            ) OR
+            -- User has access to the family member represented by the path prefix
+            EXISTS (
+                SELECT 1 FROM public.member_access ma
+                JOIN public.profiles p ON p.user_id = ma.user_id
+                WHERE ma.user_id = auth.uid()
+                  AND ma.family_member_id = public.safe_uuid(split_part(name, '/', 1))
+                  AND p.is_active = true
+            )
         )
     );
 
@@ -45,7 +58,12 @@ CREATE POLICY "Admins can upload documents"
     ON storage.objects FOR INSERT TO authenticated
     WITH CHECK (
         bucket_id = 'documents' AND
-        public.is_admin(auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE public.profiles.user_id = auth.uid()
+              AND public.profiles.role = 'admin'
+              AND public.profiles.is_active = true
+        )
     );
 
 -- 6. Create UPDATE Policy: Only admins can update files
@@ -53,7 +71,12 @@ CREATE POLICY "Admins can update documents"
     ON storage.objects FOR UPDATE TO authenticated
     USING (
         bucket_id = 'documents' AND
-        public.is_admin(auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE public.profiles.user_id = auth.uid()
+              AND public.profiles.role = 'admin'
+              AND public.profiles.is_active = true
+        )
     );
 
 -- 7. Create DELETE Policy: Only admins can delete files
@@ -61,5 +84,10 @@ CREATE POLICY "Admins can delete documents"
     ON storage.objects FOR DELETE TO authenticated
     USING (
         bucket_id = 'documents' AND
-        public.is_admin(auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE public.profiles.user_id = auth.uid()
+              AND public.profiles.role = 'admin'
+              AND public.profiles.is_active = true
+        )
     );
