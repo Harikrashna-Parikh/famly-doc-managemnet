@@ -3,10 +3,36 @@
 -- File: supabase/rls.sql
 -- ==========================================
 
--- ==========================================
--- STEP 1: Drop is_admin + all dependent policies (CASCADE), then has_member_access
--- Run this full script in Supabase SQL Editor at once.
--- ==========================================
+-- Drop all policies individually to prevent "already exists" errors
+DROP POLICY IF EXISTS "Allow users to read own profile or admins to read all" ON public.profiles;
+DROP POLICY IF EXISTS "Allow users to create their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Allow users to update own profile or admins to update all" ON public.profiles;
+DROP POLICY IF EXISTS "Allow only admins to delete profiles" ON public.profiles;
+
+DROP POLICY IF EXISTS "Allow read access to authorized members or admins" ON public.family_members;
+DROP POLICY IF EXISTS "Admins have full write access to family_members" ON public.family_members;
+DROP POLICY IF EXISTS "Admins can insert family_members" ON public.family_members;
+DROP POLICY IF EXISTS "Admins can update family_members" ON public.family_members;
+DROP POLICY IF EXISTS "Admins can delete family_members" ON public.family_members;
+
+DROP POLICY IF EXISTS "Allow users to read own access or admins to read all" ON public.member_access;
+DROP POLICY IF EXISTS "Admins have full write access to member_access" ON public.member_access;
+DROP POLICY IF EXISTS "Admins can insert member_access" ON public.member_access;
+DROP POLICY IF EXISTS "Admins can update member_access" ON public.member_access;
+DROP POLICY IF EXISTS "Admins can delete member_access" ON public.member_access;
+
+DROP POLICY IF EXISTS "Allow read access to all authenticated users" ON public.categories;
+DROP POLICY IF EXISTS "Admins have full write access to categories" ON public.categories;
+DROP POLICY IF EXISTS "Admins can insert categories" ON public.categories;
+DROP POLICY IF EXISTS "Admins can update categories" ON public.categories;
+DROP POLICY IF EXISTS "Admins can delete categories" ON public.categories;
+
+DROP POLICY IF EXISTS "Allow read access to authorized documents or admins" ON public.documents;
+DROP POLICY IF EXISTS "Admins have full write access to documents" ON public.documents;
+DROP POLICY IF EXISTS "Admins can insert documents" ON public.documents;
+DROP POLICY IF EXISTS "Admins can update documents" ON public.documents;
+DROP POLICY IF EXISTS "Admins can delete documents" ON public.documents;
+
 DROP FUNCTION IF EXISTS public.is_admin(UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.has_member_access(UUID, UUID) CASCADE;
 
@@ -49,20 +75,14 @@ ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
 -- ==========================================
 -- PROFILES POLICIES
--- CRITICAL: The SELECT policy does NOT call is_admin() to avoid infinite
--- recursion (is_admin queries profiles -> triggers SELECT policy -> loop).
--- Uses direct auth.uid() = user_id + inline EXISTS for admin check instead.
+-- NOTE: We use public.is_admin(auth.uid()) which is a SECURITY DEFINER function.
+-- Since it executes with definer privileges (bypassing RLS), it does not trigger recursion.
 -- ==========================================
 CREATE POLICY "Allow users to read own profile or admins to read all"
     ON public.profiles FOR SELECT TO authenticated
     USING (
         auth.uid() = user_id
-        OR EXISTS (
-            SELECT 1 FROM public.profiles p
-            WHERE p.user_id = auth.uid()
-              AND p.role = 'admin'
-              AND p.is_active = true
-        )
+        OR public.is_admin(auth.uid())
     );
 
 CREATE POLICY "Allow users to create their own profile"
@@ -105,8 +125,17 @@ CREATE POLICY "Allow read access to authorized members or admins"
     ON public.family_members FOR SELECT TO authenticated
     USING (public.is_admin(auth.uid()) OR (is_active = true AND public.has_member_access(auth.uid(), id)));
 
-CREATE POLICY "Admins have full write access to family_members"
-    ON public.family_members FOR ALL TO authenticated
+CREATE POLICY "Admins can insert family_members"
+    ON public.family_members FOR INSERT TO authenticated
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can update family_members"
+    ON public.family_members FOR UPDATE TO authenticated
+    USING (public.is_admin(auth.uid()))
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can delete family_members"
+    ON public.family_members FOR DELETE TO authenticated
     USING (public.is_admin(auth.uid()));
 
 -- ==========================================
@@ -116,8 +145,17 @@ CREATE POLICY "Allow users to read own access or admins to read all"
     ON public.member_access FOR SELECT TO authenticated
     USING (user_id = auth.uid() OR public.is_admin(auth.uid()));
 
-CREATE POLICY "Admins have full write access to member_access"
-    ON public.member_access FOR ALL TO authenticated
+CREATE POLICY "Admins can insert member_access"
+    ON public.member_access FOR INSERT TO authenticated
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can update member_access"
+    ON public.member_access FOR UPDATE TO authenticated
+    USING (public.is_admin(auth.uid()))
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can delete member_access"
+    ON public.member_access FOR DELETE TO authenticated
     USING (public.is_admin(auth.uid()));
 
 -- ==========================================
@@ -127,8 +165,17 @@ CREATE POLICY "Allow read access to all authenticated users"
     ON public.categories FOR SELECT TO authenticated
     USING (true);
 
-CREATE POLICY "Admins have full write access to categories"
-    ON public.categories FOR ALL TO authenticated
+CREATE POLICY "Admins can insert categories"
+    ON public.categories FOR INSERT TO authenticated
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can update categories"
+    ON public.categories FOR UPDATE TO authenticated
+    USING (public.is_admin(auth.uid()))
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can delete categories"
+    ON public.categories FOR DELETE TO authenticated
     USING (public.is_admin(auth.uid()));
 
 -- ==========================================
@@ -138,6 +185,26 @@ CREATE POLICY "Allow read access to authorized documents or admins"
     ON public.documents FOR SELECT TO authenticated
     USING (public.is_admin(auth.uid()) OR public.has_member_access(auth.uid(), family_member_id));
 
-CREATE POLICY "Admins have full write access to documents"
-    ON public.documents FOR ALL TO authenticated
+CREATE POLICY "Admins can insert documents"
+    ON public.documents FOR INSERT TO authenticated
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can update documents"
+    ON public.documents FOR UPDATE TO authenticated
+    USING (public.is_admin(auth.uid()))
+    WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can delete documents"
+    ON public.documents FOR DELETE TO authenticated
     USING (public.is_admin(auth.uid()));
+
+-- ==========================================
+-- STEP 4: Grant Table and Sequence Access to Supabase Roles
+-- ==========================================
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated, anon, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.family_members TO authenticated, anon, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.member_access TO authenticated, anon, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.categories TO authenticated, anon, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.documents TO authenticated, anon, service_role;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role;

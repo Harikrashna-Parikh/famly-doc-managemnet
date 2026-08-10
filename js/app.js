@@ -198,6 +198,25 @@ const app = {
             });
         }
 
+        // ── Auth: Password Visibility Toggles ──
+        document.querySelectorAll('.btn-toggle-password').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (!input) return;
+
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+
+                const eyeIcon = btn.querySelector('.icon-eye');
+                const eyeOffIcon = btn.querySelector('.icon-eye-off');
+                if (eyeIcon && eyeOffIcon) {
+                    eyeIcon.classList.toggle('hidden', isPassword);
+                    eyeOffIcon.classList.toggle('hidden', !isPassword);
+                }
+            });
+        });
+
         // ── Auth: Tab switches ──
         document.getElementById("tab-login-btn")?.addEventListener('click', () => this.showLoginTab());
         document.getElementById("tab-signup-btn")?.addEventListener('click', () => this.showSignupTab());
