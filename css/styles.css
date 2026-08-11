@@ -47,7 +47,7 @@
 
 /* Dark Mode Overrides (Triggered by system preference or HTML class) */
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light-theme) {
         --bg-app: #090d16;
         --bg-card: #131c2e;
         --bg-header: #101827;
@@ -61,6 +61,39 @@
         --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
         --primary-light: #1e293b;
     }
+}
+
+/* Explicit Dark Theme */
+:root.dark-theme {
+    --bg-app: #090d16;
+    --bg-card: #131c2e;
+    --bg-header: #101827;
+    --bg-sidebar: #0d121e;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-light: #64748b;
+    --border-color: #1e293b;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --primary-light: #1e293b;
+}
+
+/* Explicit Light Theme */
+:root.light-theme {
+    --bg-app: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-header: #ffffff;
+    --bg-sidebar: #0f172a;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --text-white: #ffffff;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    --primary-light: #e0e7ff;
 }
 
 /* --------------------------------------------------------------------------
@@ -1471,4 +1504,78 @@ textarea {
         display: block;
         page-break-inside: avoid;
     }
+}
+
+/* --------------------------------------------------------------------------
+   14. Document Share Component
+   -------------------------------------------------------------------------- */
+.share-options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.share-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.share-btn.whatsapp:hover {
+    border-color: #25d366;
+    background-color: rgba(37, 211, 102, 0.08);
+    color: #25d366;
+}
+
+.share-btn.email:hover {
+    border-color: #ea4335;
+    background-color: rgba(234, 67, 53, 0.08);
+    color: #ea4335;
+}
+
+.share-btn.copy:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.share-btn-icon {
+    font-size: 1.5rem;
+}
+
+.share-link-input-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.share-link-input-group input {
+    flex: 1;
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-app);
+    color: var(--text-muted);
+    outline: none;
+    text-align: center;
 }

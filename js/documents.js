@@ -235,6 +235,9 @@ const documents = {
                     <button class="btn-icon" title="Download" onclick="event.stopPropagation(); documents.downloadDocument('${doc.id}', '${doc.name}', '${doc.file_name}')">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     </button>
+                    <button class="btn-icon" title="Share document" onclick="event.stopPropagation(); documents.shareDocument('${doc.id}')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    </button>
                     ${auth.isAdmin() ? `
                     <button class="btn-icon btn-icon-danger" title="Delete document" onclick="event.stopPropagation(); documents.deleteDocument('${doc.id}', '${doc.name}', '${doc.storage_path}')">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
@@ -261,6 +264,7 @@ const documents = {
         const openTabBtn = document.getElementById("btn-doc-open-tab");
         const downloadBtn = document.getElementById("btn-doc-download");
         const printBtn = document.getElementById("btn-doc-print");
+        const shareBtn = document.getElementById("btn-doc-share");
 
         if (!modal) return;
 
@@ -306,7 +310,12 @@ const documents = {
 
             // Wire up Download button
             if (downloadBtn) {
-                downloadBtn.onclick = () => this.triggerDownload(signedUrl, doc.name, doc.file_name);
+                downloadBtn.onclick = () => this.downloadDocument(doc.id, doc.name, doc.file_name);
+            }
+
+            // Wire up Share button
+            if (shareBtn) {
+                shareBtn.onclick = () => this.shareDocument(doc.id);
             }
 
             // Wire up Print button
@@ -333,9 +342,12 @@ const documents = {
         if (!doc) return;
 
         try {
+            const safeName = utils.sanitizeFileName(fileName || docName);
             const { data, error } = await supabaseClient.storage
                 .from('documents')
-                .createSignedUrl(doc.storage_path, 120);
+                .createSignedUrl(doc.storage_path, 120, {
+                    download: safeName
+                });
 
             if (error) throw error;
 
@@ -448,5 +460,116 @@ const documents = {
         // Clean up the print section to avoid stale signed URLs
         const printSection = document.getElementById("print-section");
         if (printSection) printSection.innerHTML = '';
+    },
+
+    /**
+     * Share a document by trying mobile native share first, then falling back to custom share modal.
+     */
+    async shareDocument(docId) {
+        const doc = this.allDocs.find(d => d.id === docId);
+        if (!doc) return;
+
+        // Try native Web Share API on mobile
+        if (navigator.share && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            try {
+                utils.showToast("Generating secure shareable link...", "info");
+                const { data, error } = await supabaseClient.storage
+                    .from('documents')
+                    .createSignedUrl(doc.storage_path, 86400); // 24 hours
+
+                if (error) throw error;
+
+                await navigator.share({
+                    title: doc.name,
+                    text: `Family Locker shared document: ${doc.name}`,
+                    url: data.signedUrl
+                });
+                utils.showToast("Document shared successfully.", "success");
+                return;
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error("Native share failed, falling back to modal:", err);
+                } else {
+                    return; // User cancelled the native share sheet
+                }
+            }
+        }
+
+        // Fallback to our custom share modal
+        this.openShareModal(docId);
+    },
+
+    /**
+     * Generate 24h signed URL and open the custom Share Modal.
+     */
+    async openShareModal(docId) {
+        const doc = this.allDocs.find(d => d.id === docId);
+        if (!doc) return;
+
+        const modal = document.getElementById("modal-doc-share");
+        const nameEl = document.getElementById("share-doc-name");
+        const linkInput = document.getElementById("share-link-input");
+        const whatsappBtn = document.getElementById("share-whatsapp-btn");
+        const emailBtn = document.getElementById("share-email-btn");
+        const copyBtn = document.getElementById("share-copy-btn");
+        const copyText = document.getElementById("share-copy-text");
+
+        if (!modal) return;
+
+        if (nameEl) nameEl.textContent = doc.name;
+        if (linkInput) linkInput.value = 'Generating secure link...';
+        if (copyText) copyText.textContent = 'Copy Link';
+
+        modal.classList.remove("hidden");
+
+        try {
+            const { data, error } = await supabaseClient.storage
+                .from('documents')
+                .createSignedUrl(doc.storage_path, 86400); // 24 hours
+
+            if (error) throw error;
+
+            const signedUrl = data.signedUrl;
+            if (linkInput) linkInput.value = signedUrl;
+
+            // Wire up WhatsApp sharing
+            if (whatsappBtn) {
+                whatsappBtn.onclick = () => {
+                    const text = encodeURIComponent(`Family Locker shared document: ${doc.name}\n${signedUrl}`);
+                    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+                };
+            }
+
+            // Wire up Email sharing
+            if (emailBtn) {
+                emailBtn.onclick = () => {
+                    const subject = encodeURIComponent(`Shared Document: ${doc.name}`);
+                    const body = encodeURIComponent(`Here is a secure link to the document "${doc.name}" from our Family Locker:\n\n${signedUrl}\n\nNote: This link will expire in 24 hours.`);
+                    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+                };
+            }
+
+            // Wire up Copy Button
+            if (copyBtn) {
+                copyBtn.onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(signedUrl);
+                        if (copyText) copyText.textContent = 'Copied! ✅';
+                        utils.showToast("Link copied to clipboard!", "success");
+                        setTimeout(() => {
+                            if (copyText) copyText.textContent = 'Copy Link';
+                        }, 2000);
+                    } catch (err) {
+                        console.error("Clipboard copy failed:", err);
+                        utils.showToast("Failed to copy link. Please manually copy from the input field.", "warning");
+                    }
+                };
+            }
+
+        } catch (err) {
+            console.error("Share URL generation error:", err);
+            if (linkInput) linkInput.value = 'Failed to generate link.';
+            utils.showToast("Failed to generate secure link.", "danger");
+        }
     }
 };

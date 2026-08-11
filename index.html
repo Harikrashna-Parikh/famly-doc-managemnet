@@ -16,6 +16,20 @@
     
     <!-- Supabase JS Client (v2 CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Theme Initializer -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+            } else if (savedTheme === 'light') {
+                document.documentElement.classList.add('light-theme');
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark-theme');
+            }
+        })();
+    </script>
 </head>
 <body>
     
@@ -65,6 +79,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
             <div class="header-user-menu" id="header-user-menu">
                 <span class="user-name" id="user-display-name">Loading...</span>
                 <span class="user-role-badge" id="user-role-badge">Member</span>
+                <button id="btn-theme-toggle" class="btn btn-outline btn-sm" title="Toggle theme" style="padding: 6px 10px; display: inline-flex; align-items: center; justify-content: center;">
+                    <svg class="icon theme-icon-sun hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
                 <button id="btn-logout" class="btn btn-outline btn-sm">
                     <span>Logout</span>
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -468,6 +486,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                         <span>Print</span>
                     </button>
+                    <button id="btn-doc-share" class="btn btn-outline">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        <span>Share</span>
+                    </button>
                     <button id="btn-doc-download" class="btn btn-primary">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         <span>Download</span>
@@ -545,6 +567,74 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
             <div class="modal-footer">
                 <button class="btn btn-outline" id="btn-confirm-cancel">Cancel</button>
                 <button class="btn btn-danger" id="btn-confirm-ok">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- E. Document Share Modal -->
+    <div id="modal-doc-share" class="modal modal-dialog hidden">
+        <div class="modal-backdrop" id="share-modal-backdrop"></div>
+        <div class="modal-wrapper modal-xs">
+            <div class="modal-header">
+                <h2>Share Document</h2>
+                <button class="btn-close-modal" id="btn-close-share-modal">❌</button>
+            </div>
+            <div class="modal-body">
+                <p class="share-doc-name" id="share-doc-name" style="font-weight: 600; margin-bottom: 4px; text-align: center; font-size: 1.1rem; color: var(--text-main);"></p>
+                <p class="description-text" style="margin-bottom: 16px; text-align: center; font-size: 0.85rem; color: var(--text-muted);">Secure shareable link expires in 24 hours.</p>
+                
+                <div class="share-options-grid">
+                    <button class="share-btn whatsapp" id="share-whatsapp-btn">
+                        <span class="share-btn-icon">💬</span>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="share-btn email" id="share-email-btn">
+                        <span class="share-btn-icon">✉️</span>
+                        <span>Email</span>
+                    </button>
+                    <button class="share-btn copy" id="share-copy-btn">
+                        <span class="share-btn-icon">🔗</span>
+                        <span id="share-copy-text">Copy Link</span>
+                    </button>
+                </div>
+                
+                <div class="share-link-input-group">
+                    <input type="text" id="share-link-input" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- E. Document Share Modal -->
+    <div id="modal-doc-share" class="modal modal-dialog hidden">
+        <div class="modal-backdrop" id="share-modal-backdrop"></div>
+        <div class="modal-wrapper modal-xs">
+            <div class="modal-header">
+                <h2>Share Document</h2>
+                <button class="btn-close-modal" id="btn-close-share-modal">❌</button>
+            </div>
+            <div class="modal-body">
+                <p class="share-doc-name" id="share-doc-name" style="font-weight: 600; margin-bottom: 4px; text-align: center; font-size: 1.1rem; color: var(--text-main);"></p>
+                <p class="description-text" style="margin-bottom: 16px; text-align: center; font-size: 0.85rem; color: var(--text-muted);">Secure shareable link expires in 24 hours.</p>
+                
+                <div class="share-options-grid">
+                    <button class="share-btn whatsapp" id="share-whatsapp-btn">
+                        <span class="share-btn-icon">💬</span>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="share-btn email" id="share-email-btn">
+                        <span class="share-btn-icon">✉️</span>
+                        <span>Email</span>
+                    </button>
+                    <button class="share-btn copy" id="share-copy-btn">
+                        <span class="share-btn-icon">🔗</span>
+                        <span id="share-copy-text">Copy Link</span>
+                    </button>
+                </div>
+                
+                <div class="share-link-input-group">
+                    <input type="text" id="share-link-input" readonly>
+                </div>
             </div>
         </div>
     </div>

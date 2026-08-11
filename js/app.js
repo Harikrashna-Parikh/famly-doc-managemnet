@@ -295,6 +295,61 @@ const app = {
             document.getElementById("modal-confirm")?.classList.add("hidden");
         });
 
+        // ── Close Share Modal ──
+        document.getElementById("btn-close-share-modal")?.addEventListener('click', () => {
+            document.getElementById("modal-doc-share")?.classList.add("hidden");
+        });
+        document.getElementById("share-modal-backdrop")?.addEventListener('click', () => {
+            document.getElementById("modal-doc-share")?.classList.add("hidden");
+        });
+
+        // ── Theme Toggle Button ──
+        const themeToggleBtn = document.getElementById("btn-theme-toggle");
+        if (themeToggleBtn) {
+            const updateThemeIcons = () => {
+                const isDark = document.documentElement.classList.contains('dark-theme') || 
+                               (!document.documentElement.classList.contains('light-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const sunIcon = themeToggleBtn.querySelector('.theme-icon-sun');
+                const moonIcon = themeToggleBtn.querySelector('.theme-icon-moon');
+                if (sunIcon && moonIcon) {
+                    if (isDark) {
+                        sunIcon.classList.remove('hidden');
+                        moonIcon.classList.add('hidden');
+                    } else {
+                        sunIcon.classList.add('hidden');
+                        moonIcon.classList.remove('hidden');
+                    }
+                }
+            };
+
+            // Initial icon sync
+            updateThemeIcons();
+
+            themeToggleBtn.addEventListener('click', () => {
+                const doc = document.documentElement;
+                if (doc.classList.contains('dark-theme')) {
+                    doc.classList.remove('dark-theme');
+                    doc.classList.add('light-theme');
+                    localStorage.setItem('theme', 'light');
+                } else if (doc.classList.contains('light-theme')) {
+                    doc.classList.remove('light-theme');
+                    doc.classList.add('dark-theme');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    // System default active, toggle to opposite of current system scheme
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (prefersDark) {
+                        doc.classList.add('light-theme');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        doc.classList.add('dark-theme');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                }
+                updateThemeIcons();
+            });
+        }
+
         // ── Keyboard: Escape to close modals ──
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
