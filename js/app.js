@@ -303,6 +303,17 @@ const app = {
             document.getElementById("modal-doc-share")?.classList.add("hidden");
         });
 
+        // ── Close Download Options Modal ──
+        document.getElementById("btn-close-download-options-modal")?.addEventListener('click', () => {
+            document.getElementById("modal-doc-download-options")?.classList.add("hidden");
+        });
+        document.getElementById("download-options-modal-backdrop")?.addEventListener('click', () => {
+            document.getElementById("modal-doc-download-options")?.classList.add("hidden");
+        });
+        document.getElementById("btn-download-options-cancel")?.addEventListener('click', () => {
+            document.getElementById("modal-doc-download-options")?.classList.add("hidden");
+        });
+
         // ── Theme Toggle Button ──
         const themeToggleBtn = document.getElementById("btn-theme-toggle");
         if (themeToggleBtn) {

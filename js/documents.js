@@ -333,29 +333,13 @@ const documents = {
     },
 
     /**
-     * Download a document by generating a signed URL and triggering download.
+     * Download a document by showing custom download options modal.
      */
     async downloadDocument(docId, docName, fileName) {
-        utils.showToast("Generating secure download link...", "info");
-
         const doc = this.allDocs.find(d => d.id === docId);
         if (!doc) return;
 
-        try {
-            const safeName = utils.sanitizeFileName(fileName || docName);
-            const { data, error } = await supabaseClient.storage
-                .from('documents')
-                .createSignedUrl(doc.storage_path, 120, {
-                    download: safeName
-                });
-
-            if (error) throw error;
-
-            this.triggerDownload(data.signedUrl, docName, doc.file_name);
-        } catch (err) {
-            console.error("Download error:", err);
-            utils.showToast("Download failed. Please try again.", "danger");
-        }
+        this.openDownloadOptionsModal(doc);
     },
 
     /**
@@ -571,5 +555,370 @@ const documents = {
             if (linkInput) linkInput.value = 'Failed to generate link.';
             utils.showToast("Failed to generate secure link.", "danger");
         }
+    },
+
+    /**
+     * Generate 24h signed URL and open the Custom Download Options Modal.
+     */
+    async openDownloadOptionsModal(doc) {
+        const modal = document.getElementById("modal-doc-download-options");
+        const nameEl = document.getElementById("download-options-doc-name");
+        const formatSelect = document.getElementById("download-format");
+        
+        const dimensionPreset = document.getElementById("download-dimension-preset");
+        const customDimensions = document.getElementById("download-custom-dimensions");
+        const widthInput = document.getElementById("download-width");
+        const heightInput = document.getElementById("download-height");
+        const lockAspectBtn = document.getElementById("btn-lock-aspect");
+        
+        const sizePreset = document.getElementById("download-size-preset");
+        const customSizes = document.getElementById("download-custom-sizes");
+        const minKbInput = document.getElementById("download-min-kb");
+        const maxKbInput = document.getElementById("download-max-kb");
+        
+        const confirmBtn = document.getElementById("btn-download-options-confirm");
+        const spinner = document.getElementById("download-options-spinner");
+        const btnText = document.getElementById("download-options-btn-text");
+
+        if (!modal) return;
+
+        // Reset fields
+        if (nameEl) nameEl.textContent = doc.name;
+        if (formatSelect) formatSelect.value = "original";
+        if (dimensionPreset) dimensionPreset.value = "original";
+        if (customDimensions) customDimensions.classList.add("hidden");
+        if (sizePreset) sizePreset.value = "original";
+        if (customSizes) customSizes.classList.add("hidden");
+        if (widthInput) widthInput.value = "";
+        if (heightInput) heightInput.value = "";
+        
+        // Default aspect ratio locking
+        let aspectLocked = true;
+        if (lockAspectBtn) {
+            lockAspectBtn.classList.add("active");
+            lockAspectBtn.textContent = "🔒";
+        }
+
+        modal.classList.remove("hidden");
+
+        // Keep track of original dimensions
+        let originalWidth = 800;
+        let originalHeight = 600;
+        let originalAspectRatio = 1.333;
+        let isImage = doc.file_type && doc.file_type.startsWith('image/');
+        let isPDF = doc.file_type === 'application/pdf';
+
+        // Set up event listeners for presets show/hide
+        dimensionPreset.onchange = () => {
+            if (dimensionPreset.value === "custom") {
+                customDimensions.classList.remove("hidden");
+            } else {
+                customDimensions.classList.add("hidden");
+            }
+        };
+
+        sizePreset.onchange = () => {
+            if (sizePreset.value === "custom") {
+                customSizes.classList.remove("hidden");
+            } else {
+                customSizes.classList.add("hidden");
+            }
+        };
+
+        // Aspect ratio lock toggle
+        if (lockAspectBtn) {
+            lockAspectBtn.onclick = () => {
+                aspectLocked = !aspectLocked;
+                if (aspectLocked) {
+                    lockAspectBtn.classList.add("active");
+                    lockAspectBtn.textContent = "🔒";
+                    // Recalculate height based on current width
+                    if (widthInput.value && originalAspectRatio) {
+                        heightInput.value = Math.round(widthInput.value / originalAspectRatio);
+                    }
+                } else {
+                    lockAspectBtn.classList.remove("active");
+                    lockAspectBtn.textContent = "🔓";
+                }
+            };
+        }
+
+        // Width / Height input listeners for aspect ratio
+        widthInput.oninput = () => {
+            if (aspectLocked && widthInput.value && originalAspectRatio) {
+                heightInput.value = Math.round(widthInput.value / originalAspectRatio);
+            }
+        };
+
+        heightInput.oninput = () => {
+            if (aspectLocked && heightInput.value && originalAspectRatio) {
+                widthInput.value = Math.round(heightInput.value * originalAspectRatio);
+            }
+        };
+
+        // Fetch original dimensions in background to prefill
+        try {
+            const { data, error } = await supabaseClient.storage
+                .from('documents')
+                .createSignedUrl(doc.storage_path, 120);
+
+            if (error) throw error;
+
+            const signedUrl = data.signedUrl;
+
+            if (isImage) {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    originalWidth = img.naturalWidth;
+                    originalHeight = img.naturalHeight;
+                    originalAspectRatio = originalWidth / originalHeight;
+                    widthInput.placeholder = originalWidth;
+                    heightInput.placeholder = originalHeight;
+                    if (!widthInput.value) widthInput.value = originalWidth;
+                    if (!heightInput.value) heightInput.value = originalHeight;
+                };
+                img.src = signedUrl;
+            } else if (isPDF) {
+                // Fetch first page viewport using pdfjsLib
+                const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+                const loadingTask = pdfjsLib.getDocument(signedUrl);
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 1.0 });
+                originalWidth = Math.round(viewport.width);
+                originalHeight = Math.round(viewport.height);
+                originalAspectRatio = originalWidth / originalHeight;
+                widthInput.placeholder = originalWidth;
+                heightInput.placeholder = originalHeight;
+                if (!widthInput.value) widthInput.value = originalWidth;
+                if (!heightInput.value) heightInput.value = originalHeight;
+            }
+        } catch (e) {
+            console.warn("Could not pre-fetch document dimensions:", e);
+        }
+
+        // Action when Download button inside modal is clicked
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            if (spinner) spinner.classList.remove("hidden");
+            if (btnText) btnText.textContent = "Processing...";
+
+            try {
+                // Get selected values
+                const format = formatSelect.value;
+                const dimMode = dimensionPreset.value;
+                const sizeMode = sizePreset.value;
+                
+                let targetWidth = parseInt(widthInput.value) || originalWidth;
+                let targetHeight = parseInt(heightInput.value) || originalHeight;
+                
+                let minKb = parseInt(minKbInput.value) || 10;
+                let maxKb = parseInt(maxKbInput.value) || 500;
+
+                utils.showToast("Preparing document files...", "info");
+
+                // Get original signed URL
+                const { data, error } = await supabaseClient.storage
+                    .from('documents')
+                    .createSignedUrl(doc.storage_path, 120);
+
+                if (error) throw error;
+                const signedUrl = data.signedUrl;
+
+                // Case 1: Downloading completely original file without modifications
+                if (format === 'original' && dimMode === 'original' && sizeMode === 'original') {
+                    // Force attachment download of original file
+                    const safeName = utils.sanitizeFileName(doc.file_name || doc.name);
+                    const dlRes = await supabaseClient.storage
+                        .from('documents')
+                        .createSignedUrl(doc.storage_path, 120, { download: safeName });
+                    
+                    if (dlRes.error) throw dlRes.error;
+                    this.triggerDownload(dlRes.data.signedUrl, doc.name, doc.file_name);
+                    modal.classList.add("hidden");
+                    return;
+                }
+
+                // Case 2: Perform client-side canvas processing (converting format, resizing, and compressing)
+                let canvas;
+                if (isImage) {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = signedUrl;
+                    });
+                    
+                    canvas = document.createElement('canvas');
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                } else if (isPDF) {
+                    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+                    const loadingTask = pdfjsLib.GlobalWorkerOptions.getDocument(signedUrl);
+                    const pdf = await loadingTask.promise;
+                    const page = await pdf.getPage(1);
+                    
+                    // Render page at scale
+                    const scale = targetWidth / page.getViewport({ scale: 1.0 }).width;
+                    const viewport = page.getViewport({ scale: scale });
+                    canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    const ctx = canvas.getContext('2d');
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                } else {
+                    // Non-renderable format (like word doc) - we can only download original
+                    utils.showToast("Cannot customize sizes or formats for this file type. Downloading original.", "warning");
+                    const safeName = utils.sanitizeFileName(doc.file_name || doc.name);
+                    const dlRes = await supabaseClient.storage
+                        .from('documents')
+                        .createSignedUrl(doc.storage_path, 120, { download: safeName });
+                    
+                    if (dlRes.error) throw dlRes.error;
+                    this.triggerDownload(dlRes.data.signedUrl, doc.name, doc.file_name);
+                    modal.classList.add("hidden");
+                    return;
+                }
+
+                // Format setup
+                let targetFormat = format;
+                if (targetFormat === 'original') {
+                    // Match original file extension
+                    const ext = doc.file_name ? doc.file_name.split('.').pop().toLowerCase() : '';
+                    targetFormat = ['jpg', 'jpeg', 'png', 'pdf'].includes(ext) ? ext : 'jpg';
+                }
+                if (targetFormat === 'jpeg') targetFormat = 'jpg';
+
+                let finalBlob;
+                let extension = targetFormat;
+                
+                if (targetFormat === 'pdf') {
+                    // Compile canvas to PDF using jsPDF library
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: canvas.width > canvas.height ? 'l' : 'p',
+                        unit: 'px',
+                        format: [canvas.width, canvas.height]
+                    });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+                    finalBlob = pdf.output('blob');
+                } else {
+                    // Compress image canvas to JPG / PNG within size limit if requested
+                    if (sizeMode === 'custom') {
+                        finalBlob = await this.compressImageToSizeRange(canvas, targetFormat, minKb, maxKb);
+                    } else {
+                        // Standard conversion without size constraint
+                        const mimeType = targetFormat === 'png' ? 'image/png' : 'image/jpeg';
+                        finalBlob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, 0.92));
+                    }
+                }
+
+                // Trigger blob download in browser
+                const baseName = doc.name.replace(/\.[^/.]+$/, ""); // Strip existing extension
+                const finalFilename = `${baseName}.${extension}`;
+                this.triggerBlobDownload(finalBlob, finalFilename);
+                utils.showToast(`Custom download completed successfully!`, "success");
+                modal.classList.add("hidden");
+
+            } catch (err) {
+                console.error("Custom download failure:", err);
+                utils.showToast("Failed to process custom download. Downloading original file instead.", "warning");
+                // Fallback to original download
+                try {
+                    const safeName = utils.sanitizeFileName(doc.file_name || doc.name);
+                    const dlRes = await supabaseClient.storage
+                        .from('documents')
+                        .createSignedUrl(doc.storage_path, 120, { download: safeName });
+                    if (dlRes.error) throw dlRes.error;
+                    this.triggerDownload(dlRes.data.signedUrl, doc.name, doc.file_name);
+                    modal.classList.add("hidden");
+                } catch (fallbackErr) {
+                    utils.showToast("Download failed entirely.", "danger");
+                }
+            } finally {
+                confirmBtn.disabled = false;
+                if (spinner) spinner.classList.add("hidden");
+                if (btnText) btnText.textContent = "Download";
+            }
+        };
+    },
+
+    /**
+     * Compress image canvas iteratively to fit within minKb and maxKb limits.
+     */
+    async compressImageToSizeRange(canvas, format, minKb, maxKb) {
+        let quality = 0.92;
+        let mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, quality));
+
+        if (format === 'png') {
+            // PNG doesn't support quality loss, so we must iteratively scale down canvas if it exceeds max size
+            let scale = 0.9;
+            let iterations = 0;
+            const maxBytes = maxKb * 1024;
+            while (blob.size > maxBytes && iterations < 7) {
+                iterations++;
+                const newCanvas = document.createElement('canvas');
+                newCanvas.width = Math.round(canvas.width * scale);
+                newCanvas.height = Math.round(canvas.height * scale);
+                const ctx = newCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, 0, newCanvas.width, newCanvas.height);
+                canvas = newCanvas;
+                blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType));
+                scale *= 0.8;
+            }
+        } else {
+            // JPEG supports quality adjustments and scaling
+            let iterations = 0;
+            const minBytes = minKb * 1024;
+            const maxBytes = maxKb * 1024;
+
+            while ((blob.size > maxBytes || blob.size < minBytes) && iterations < 10) {
+                iterations++;
+                if (blob.size > maxBytes) {
+                    quality -= 0.15;
+                    if (quality < 0.1) {
+                        // Quality is too low, let's scale down pixel dimensions instead
+                        const newCanvas = document.createElement('canvas');
+                        newCanvas.width = Math.round(canvas.width * 0.75);
+                        newCanvas.height = Math.round(canvas.height * 0.75);
+                        const ctx = newCanvas.getContext('2d');
+                        ctx.drawImage(canvas, 0, 0, newCanvas.width, newCanvas.height);
+                        canvas = newCanvas;
+                        quality = 0.85; // reset quality for smaller resolution
+                    }
+                } else if (blob.size < minBytes) {
+                    if (quality < 0.95) {
+                        quality += 0.1;
+                    } else {
+                        break; // Cannot increase quality any further without upscaling
+                    }
+                }
+                blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, Math.max(0.05, Math.min(1, quality))));
+            }
+        }
+
+        return blob;
+    },
+
+    /**
+     * Download a raw Blob directly in the browser.
+     */
+    triggerBlobDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 };

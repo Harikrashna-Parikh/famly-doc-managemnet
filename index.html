@@ -17,6 +17,12 @@
     <!-- Supabase JS Client (v2 CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- jsPDF Library for compiling canvas to PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- PDF.js Library for client-side PDF page rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    
     <!-- Theme Initializer -->
     <script>
         (function() {
@@ -635,6 +641,79 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
                 <div class="share-link-input-group">
                     <input type="text" id="share-link-input" readonly>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- F. Document Download Customization Modal -->
+    <div id="modal-doc-download-options" class="modal modal-dialog hidden">
+        <div class="modal-backdrop" id="download-options-modal-backdrop"></div>
+        <div class="modal-wrapper modal-sm">
+            <div class="modal-header">
+                <h2>Download Customization</h2>
+                <button class="btn-close-modal" id="btn-close-download-options-modal">❌</button>
+            </div>
+            <div class="modal-body">
+                <p id="download-options-doc-name" style="font-weight: 600; margin-bottom: 16px; text-align: center; color: var(--text-main); font-size: 1.05rem;"></p>
+                
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Format</label>
+                    <select id="download-format" class="form-control" style="width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px; background: var(--bg-card); color: var(--text-main);">
+                        <option value="original">Original Format</option>
+                        <option value="jpg">JPEG Image (.jpg)</option>
+                        <option value="png">PNG Image (.png)</option>
+                        <option value="pdf">PDF Document (.pdf)</option>
+                    </select>
+                </div>
+                
+                <!-- Dimensions Section -->
+                <div id="download-dimensions-section" class="form-group" style="margin-bottom: 14px;">
+                    <label style="display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Dimensions (Pixels)</label>
+                    <select id="download-dimension-preset" class="form-control" style="width: 100%; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px; background: var(--bg-card); color: var(--text-main);">
+                        <option value="original">Original Dimensions</option>
+                        <option value="custom">Custom Dimensions</option>
+                    </select>
+                    
+                    <div id="download-custom-dimensions" class="hidden" style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                        <div style="flex: 1;">
+                            <input type="number" id="download-width" placeholder="Width" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem;">
+                        </div>
+                        <span style="color: var(--text-light); font-size: 0.85rem;">x</span>
+                        <div style="flex: 1;">
+                            <input type="number" id="download-height" placeholder="Height" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem;">
+                        </div>
+                        <button type="button" id="btn-lock-aspect" class="btn btn-outline btn-sm active" title="Maintain Aspect Ratio" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; height: 32px; font-size: 0.75rem;">
+                            🔒
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Size Limitation Section -->
+                <div id="download-size-section" class="form-group" style="margin-bottom: 18px;">
+                    <label style="display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">File Size (KB)</label>
+                    <select id="download-size-preset" class="form-control" style="width: 100%; margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px; background: var(--bg-card); color: var(--text-main);">
+                        <option value="original">Original File Size (Uncompressed)</option>
+                        <option value="custom">Target Size Range</option>
+                    </select>
+                    
+                    <div id="download-custom-sizes" class="hidden" style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-light); margin-bottom: 4px;">Min (KB)</label>
+                            <input type="number" id="download-min-kb" value="10" min="1" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-light); margin-bottom: 4px;">Max (KB)</label>
+                            <input type="number" id="download-max-kb" value="500" min="5" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-main); font-size: 0.85rem;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn btn-outline" id="btn-download-options-cancel">Cancel</button>
+                <button class="btn btn-primary" id="btn-download-options-confirm" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span id="download-options-spinner" class="hidden">⚙️</span>
+                    <span id="download-options-btn-text">Download</span>
+                </button>
             </div>
         </div>
     </div>
