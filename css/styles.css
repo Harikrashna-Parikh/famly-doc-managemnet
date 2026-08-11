@@ -1105,7 +1105,7 @@ textarea {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 100;
+    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1352,7 +1352,7 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    z-index: 1000;
+    z-index: 1100;
 }
 
 .toast {
