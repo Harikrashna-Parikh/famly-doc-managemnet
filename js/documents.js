@@ -295,7 +295,7 @@ const documents = {
             // Render preview
             if (previewEl) {
                 if (isImage) {
-                    previewEl.innerHTML = `<img class="preview-image" src="${signedUrl}" alt="${doc.name}">`;
+                    previewEl.innerHTML = `<img class="preview-image" src="${signedUrl}" alt="${doc.name}" style="cursor: zoom-in;" onclick="documents.openFullscreen('${signedUrl}')">`;
                 } else if (isPDF) {
                     previewEl.innerHTML = `<iframe class="preview-pdf" src="${signedUrl}" title="${doc.name}"></iframe>`;
                 } else {
@@ -444,6 +444,32 @@ const documents = {
         // Clean up the print section to avoid stale signed URLs
         const printSection = document.getElementById("print-section");
         if (printSection) printSection.innerHTML = '';
+    },
+
+    /**
+     * Open the fullscreen image viewer.
+     */
+    openFullscreen(url) {
+        const modal = document.getElementById("modal-fullscreen-viewer");
+        const img = document.getElementById("fullscreen-image");
+        if (modal && img) {
+            img.src = url;
+            modal.classList.remove("hidden");
+        }
+    },
+
+    /**
+     * Close the fullscreen image viewer.
+     */
+    closeFullscreen() {
+        const modal = document.getElementById("modal-fullscreen-viewer");
+        const img = document.getElementById("fullscreen-image");
+        if (modal) {
+            modal.classList.add("hidden");
+        }
+        if (img) {
+            img.src = "";
+        }
     },
 
     /**

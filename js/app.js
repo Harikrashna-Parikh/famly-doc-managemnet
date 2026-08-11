@@ -255,6 +255,10 @@ const app = {
         // Close modal when clicking backdrop
         document.querySelector('#modal-doc-viewer .modal-backdrop')?.addEventListener('click', () => documents.closeViewer());
 
+        // ── Fullscreen Viewer: Close button & backdrop ──
+        document.getElementById("btn-close-fullscreen")?.addEventListener('click', () => documents.closeFullscreen());
+        document.getElementById("fullscreen-backdrop")?.addEventListener('click', () => documents.closeFullscreen());
+
         // ── Member Modal: Close & Submit ──
         document.getElementById("btn-show-add-member")?.addEventListener('click', () => members.showAddModal());
         document.getElementById("btn-close-member-modal")?.addEventListener('click', () => {
