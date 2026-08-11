@@ -86,30 +86,37 @@ const app = {
         // Hide all views
         document.querySelectorAll('.app-view').forEach(v => v.classList.add('hidden'));
 
-        // Update active nav item
+        // Update active nav item (sidebar)
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+        // Update active bottom nav tab (mobile)
+        document.querySelectorAll('#mobile-bottom-nav .nav-tab').forEach(t => t.classList.remove('active'));
 
         if (route === '/dashboard' || route === '/') {
             this.showView('view-dashboard');
             document.getElementById("nav-dashboard")?.classList.add('active');
+            document.getElementById("m-nav-dashboard")?.classList.add('active');
             dashboard.render();
         }
         else if (route.startsWith('/member/')) {
             const memberId = route.replace('/member/', '');
             this.showView('view-member');
             document.getElementById("nav-dashboard")?.classList.add('active');
+            document.getElementById("m-nav-dashboard")?.classList.add('active');
             documents.renderMemberView(memberId);
         }
         else if (route === '/upload') {
             if (!auth.isAdmin()) { this.navigate('/dashboard'); return; }
             this.showView('view-upload');
             document.getElementById("nav-upload")?.classList.add('active');
+            document.getElementById("m-nav-upload")?.classList.add('active');
             upload.renderUploadView();
         }
         else if (route === '/settings') {
             if (!auth.isAdmin()) { this.navigate('/dashboard'); return; }
             this.showView('view-settings');
             document.getElementById("nav-settings")?.classList.add('active');
+            document.getElementById("m-nav-settings")?.classList.add('active');
             members.renderSettingsView();
         }
         else {
@@ -360,6 +367,14 @@ const app = {
                 updateThemeIcons();
             });
         }
+
+        // ── Mobile Bottom Nav Tabs ──
+        document.querySelectorAll('#mobile-bottom-nav .nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const route = tab.getAttribute('data-route');
+                if (route) this.navigate(route);
+            });
+        });
 
         // ── Keyboard: Escape to close modals ──
         document.addEventListener('keydown', (e) => {

@@ -474,8 +474,7 @@ const documents = {
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
-                        title: doc.name,
-                        text: `Family Locker document: ${doc.name}`
+                        title: doc.name
                     });
                     utils.showToast("Document shared successfully.", "success");
                     return;
@@ -483,7 +482,6 @@ const documents = {
                     // Fall back to link-based native share if file share isn't supported
                     await navigator.share({
                         title: doc.name,
-                        text: `Family Locker shared document: ${doc.name}`,
                         url: data.signedUrl
                     });
                     utils.showToast("Document link shared successfully.", "success");
@@ -548,8 +546,7 @@ const documents = {
                         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                             await navigator.share({
                                 files: [file],
-                                title: doc.name,
-                                text: `Family Locker document: ${doc.name}`
+                                title: doc.name
                             });
                         } else {
                             // Direct blob download
@@ -568,7 +565,7 @@ const documents = {
             // Wire up WhatsApp sharing
             if (whatsappBtn) {
                 whatsappBtn.onclick = () => {
-                    const text = encodeURIComponent(`Family Locker shared document: ${doc.name}\n${signedUrl}`);
+                    const text = encodeURIComponent(`${doc.name}\n${signedUrl}`);
                     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
                 };
             }

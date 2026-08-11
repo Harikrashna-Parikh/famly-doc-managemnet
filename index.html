@@ -13,6 +13,7 @@
     
     <!-- App Styling -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mobile.css">
     
     <!-- Supabase JS Client (v2 CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -384,6 +385,22 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
                 </section>
             </main>
         </div>
+
+        <!-- Flutter-style Bottom Navigation (mobile only) -->
+        <nav id="mobile-bottom-nav" style="display:none;">
+            <button class="nav-tab active" data-route="/dashboard" id="m-nav-dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                <span>Home</span>
+            </button>
+            <button class="nav-tab admin-only hidden" data-route="/upload" id="m-nav-upload">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Upload</span>
+            </button>
+            <button class="nav-tab admin-only hidden" data-route="/settings" id="m-nav-settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09c-.658.003-1.25.396-1.51 1z"></path></svg>
+                <span>Settings</span>
+            </button>
+        </nav>
     </div>
 
     <!-- 4. Authenticating / Logging-In Screen (Standard credentials UI) -->
@@ -611,43 +628,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
         </div>
     </div>
 
-    <!-- E. Document Share Modal -->
-    <div id="modal-doc-share" class="modal modal-dialog hidden">
-        <div class="modal-backdrop" id="share-modal-backdrop"></div>
-        <div class="modal-wrapper modal-xs">
-            <div class="modal-header">
-                <h2>Share Document</h2>
-                <button class="btn-close-modal" id="btn-close-share-modal">❌</button>
-            </div>
-            <div class="modal-body">
-                <p class="share-doc-name" id="share-doc-name" style="font-weight: 600; margin-bottom: 4px; text-align: center; font-size: 1.1rem; color: var(--text-main);"></p>
-                <p class="description-text" style="margin-bottom: 16px; text-align: center; font-size: 0.85rem; color: var(--text-muted);">Secure shareable link expires in 24 hours.</p>
-                
-                <div class="share-options-grid">
-                    <button class="share-btn file-attach" id="share-file-btn">
-                        <span class="share-btn-icon">📎</span>
-                        <span>Share File</span>
-                    </button>
-                    <button class="share-btn whatsapp" id="share-whatsapp-btn">
-                        <span class="share-btn-icon">💬</span>
-                        <span>WhatsApp</span>
-                    </button>
-                    <button class="share-btn email" id="share-email-btn">
-                        <span class="share-btn-icon">✉️</span>
-                        <span>Email</span>
-                    </button>
-                    <button class="share-btn copy" id="share-copy-btn">
-                        <span class="share-btn-icon">🔗</span>
-                        <span id="share-copy-text">Copy Link</span>
-                    </button>
-                </div>
-                
-                <div class="share-link-input-group">
-                    <input type="text" id="share-link-input" readonly>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Note: Duplicate share modal removed. Single share modal at line 580 is canonical. -->
 
     <!-- F. Document Download Customization Modal -->
     <div id="modal-doc-download-options" class="modal modal-dialog hidden">

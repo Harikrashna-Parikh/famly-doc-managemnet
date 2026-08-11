@@ -1,0 +1,624 @@
+/* ==========================================================================
+   FLUTTER-INSPIRED MOBILE UI OVERRIDES
+   File: css/mobile.css — imported AFTER styles.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Global Mobile-First Resets
+   -------------------------------------------------------------------------- */
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+body { overscroll-behavior-y: contain; }
+* { -webkit-tap-highlight-color: transparent; }
+
+/* --------------------------------------------------------------------------
+   1. Bottom Navigation Bar (Flutter-style)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Hide desktop sidebar completely */
+  .app-sidebar { display: none !important; }
+  .sidebar-footer { display: none !important; }
+
+  /* Workspace fills screen */
+  .workspace { flex-direction: column; }
+
+  /* App container uses full height minus bottom nav */
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* Content pane fills between header and bottom nav */
+  .content-pane {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px 88px 16px;
+  }
+
+  /* ── Bottom Navigation Bar ── */
+  #mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    z-index: 200;
+    padding: 0;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  #mobile-bottom-nav .nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: color 0.2s ease;
+    position: relative;
+    padding: 8px 0;
+    letter-spacing: 0.02em;
+  }
+
+  #mobile-bottom-nav .nav-tab svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+    transition: all 0.2s ease;
+  }
+
+  #mobile-bottom-nav .nav-tab.active {
+    color: var(--primary);
+  }
+
+  #mobile-bottom-nav .nav-tab.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* ── Header: compact AppBar ── */
+  .app-header {
+    height: 56px;
+    padding: 0 16px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg-header) 85%, transparent);
+  }
+
+  .brand-icon { font-size: 1.4rem; }
+  .brand-text { font-size: 1.05rem; }
+
+  .header-user-menu { gap: 6px; }
+  .user-name { display: none; }
+  .user-role-badge { display: none; }
+
+  .header-user-menu .btn-sm {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .header-user-menu .btn-sm span { display: none; }
+  .header-user-menu .btn-sm .icon { width: 18px; height: 18px; }
+
+  /* ── View headers ── */
+  .view-header {
+    margin-bottom: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .view-header h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+
+  /* ── Stats Bar: horizontal scroll chips ── */
+  .stats-bar {
+    display: flex !important;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 4px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .stats-bar::-webkit-scrollbar { display: none; }
+
+  .stat-card {
+    min-width: 120px;
+    flex-shrink: 0;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--bg-card), color-mix(in srgb, var(--primary-light) 40%, var(--bg-card)));
+    border: 1px solid var(--border-color);
+  }
+
+  .stat-num { font-size: 1.5rem; }
+  .stat-label { font-size: 0.72rem; margin-top: 2px; }
+
+  /* ── Family Member Cards: Flutter ListTile style ── */
+  .family-members-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-title-wrapper {
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+  }
+
+  .section-title { font-size: 1.1rem; }
+
+  .family-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 14px;
+    border-radius: 16px;
+    box-shadow: none;
+    transition: background 0.15s ease;
+  }
+
+  .family-card:hover {
+    transform: none;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--primary-light) 30%, var(--bg-card));
+  }
+
+  .family-card:active {
+    background: color-mix(in srgb, var(--primary-light) 50%, var(--bg-card));
+    transform: scale(0.98);
+  }
+
+  .family-card-header {
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .family-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    gap: 6px;
+  }
+
+  .family-card-body { display: none; }
+
+  .family-card-badge {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+  }
+
+  .family-card-footer {
+    flex-shrink: 0;
+  }
+
+  .family-card-footer .btn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    border-radius: 12px;
+  }
+
+  /* ── Document Cards: Material ListTile ── */
+  .docs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .category-section {
+    padding: 14px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+
+  .category-section-title {
+    font-size: 0.95rem;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  .doc-card {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    background: transparent;
+    gap: 10px;
+  }
+
+  .doc-card:last-child { border-bottom: none; }
+
+  .doc-card:hover {
+    transform: none;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--primary-light) 20%, transparent);
+  }
+
+  .doc-card:active {
+    background: color-mix(in srgb, var(--primary-light) 40%, transparent);
+    transform: scale(0.99);
+  }
+
+  .doc-icon { font-size: 1.6rem; }
+
+  .doc-name { font-size: 0.88rem; font-weight: 600; }
+  .doc-meta { font-size: 0.72rem; }
+
+  .doc-card-actions {
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .doc-card-actions .btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Category Filter Tabs: Flutter Chips ── */
+  .filter-panel { margin-bottom: 16px; gap: 10px; }
+
+  .category-tabs {
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+
+  .category-tab {
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  /* ── Search Bar ── */
+  #doc-search-input {
+    border-radius: 28px;
+    padding: 12px 16px 12px 44px;
+    background: var(--bg-card);
+    font-size: 0.9rem !important;
+  }
+
+  .search-icon { left: 16px; }
+
+  /* ── Back Header ── */
+  .view-header.back-header { gap: 8px; }
+
+  .btn-back {
+    font-size: 0.85rem;
+    padding: 6px 0;
+  }
+
+  .member-header-info h1 { font-size: 1.2rem; }
+
+  /* ── Modals: Full-width Bottom Sheet ── */
+  .modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh;
+    border-radius: 24px 24px 0 0 !important;
+    animation: sheetUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+  }
+
+  @keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* Drag handle indicator */
+  .modal-wrapper::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 4px;
+    margin: 10px auto 4px;
+  }
+
+  .modal-header {
+    padding: 12px 20px 12px;
+    border-bottom: none;
+  }
+
+  .modal-header h2 { font-size: 1.1rem; }
+
+  .modal-body { padding: 16px 20px; }
+  .modal-body-scroll { padding: 12px 20px; }
+
+  .modal-footer {
+    padding: 14px 20px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    flex-direction: column-reverse;
+    gap: 8px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0;
+  }
+
+  .modal-footer .btn,
+  .modal-footer button {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.92rem !important;
+  }
+
+  .footer-actions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .footer-actions-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ── Document Viewer Modal ── */
+  .doc-preview-area {
+    min-height: 200px;
+    max-height: 50vh;
+    border-radius: 14px;
+  }
+
+  .preview-image { max-height: 50vh; }
+  .preview-pdf { height: 50vh; }
+
+  /* ── Share Modal: 2x2 grid ── */
+  .share-options-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .share-btn {
+    padding: 16px 12px;
+    border-radius: 16px;
+    font-size: 0.82rem !important;
+    font-weight: 600;
+  }
+
+  .share-btn-icon { font-size: 1.8rem; }
+
+  /* ── Upload Form ── */
+  .form-container { padding: 0; }
+
+  .card-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .drop-zone {
+    border-radius: 16px;
+    padding: 24px 16px;
+  }
+
+  .form-actions {
+    margin-top: 16px;
+  }
+
+  .form-actions .btn {
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+  }
+
+  /* ── Buttons: larger touch targets ── */
+  .btn {
+    min-height: 44px;
+    border-radius: 14px;
+  }
+
+  .btn-primary {
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+  }
+
+  /* ── Inputs: Material-like ── */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 16px !important;
+    min-height: 48px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  }
+
+  /* ── Toast: bottom center ── */
+  .toast-container {
+    bottom: 76px;
+    right: 16px;
+    left: 16px;
+  }
+
+  .toast {
+    min-width: auto;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 0.85rem !important;
+  }
+
+  /* ── Settings View ── */
+  .settings-grid { gap: 20px; }
+
+  .settings-card { border-radius: 16px; }
+
+  .card-header {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .card-header h2 { font-size: 1rem; }
+
+  .card-body { padding: 14px 16px; }
+
+  .table-wrapper { border-radius: 12px; }
+
+  .settings-table th,
+  .settings-table td {
+    padding: 10px 12px;
+    font-size: 0.82rem !important;
+  }
+
+  .inline-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .inline-form select {
+    min-width: 100%;
+  }
+
+  .inline-form .btn {
+    width: 100%;
+  }
+
+  /* ── Login View ── */
+  .login-card {
+    max-width: 100%;
+    border-radius: 24px;
+    padding: 28px 24px;
+    border: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  .login-logo { font-size: 2.6rem; }
+  .login-logo-wrapper h2 { font-size: 1.3rem; }
+
+  .login-tabs {
+    border-radius: 14px;
+    padding: 3px;
+  }
+
+  .login-tab-btn {
+    border-radius: 11px;
+    padding: 10px;
+    font-size: 0.88rem !important;
+  }
+
+  .auth-form { gap: 14px; }
+
+  .auth-form .btn-block {
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ── Empty States ── */
+  .empty-state { padding: 40px 20px; }
+  .empty-state-icon { font-size: 2.2rem; }
+
+  .loading-placeholder {
+    padding: 32px 16px;
+    font-size: 0.88rem !important;
+  }
+
+  /* ── Confirm Dialog ── */
+  .modal-dialog .modal-wrapper {
+    max-height: auto;
+  }
+
+  /* ── Ripple effect for interactive elements ── */
+  .family-card,
+  .doc-card,
+  .share-btn,
+  .category-tab,
+  .nav-tab {
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 769px) {
+  #mobile-bottom-nav { display: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   2. Extra Small (< 380px) fine-tuning
+   -------------------------------------------------------------------------- */
+@media (max-width: 380px) {
+  .content-pane { padding: 12px 10px 84px 10px; }
+  .stat-card { min-width: 100px; padding: 10px 12px; }
+  .stat-num { font-size: 1.3rem; }
+  .family-card { padding: 12px 14px; }
+  .doc-card { padding: 10px 12px; }
+  .view-header h1 { font-size: 1.2rem; }
+}
