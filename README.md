@@ -4,6 +4,16 @@ A **secure, private, static web application** for organizing and accessing your 
 
 ---
 
+## ✨ Key Features
+
+- 🔐 **Secure Private Storage:** Powered by Supabase Storage with Row Level Security (RLS) and 5-minute temporary signed URLs.
+- 📱 **Mobile-First Responsive Layout:** Custom Flutter-inspired bottom sheet modals with `44px` safety padding, sticky headers/footers, and scrollable bodies that prevent virtual keyboard clipping.
+- 🔍 **Interactive Fullscreen Viewer:** Tap/click any document photo preview to open a distraction-free, dark-mode fullscreen viewer.
+- 📥 **Advanced Custom Downloads:** In-browser format conversion (JPG, PNG, PDF), aspect-locked dimension scaling, and target-size file compression (10KB - 500KB) using client-side canvas.
+- 🖨️ **Clean Printing & Native Sharing:** Custom print layouts showing only the document image, and native mobile sharing support (Web Share API) for sharing original files directly.
+
+---
+
 ## ⚠️ Security Warning
 
 > This application is intended for **personal and family use only**.
@@ -285,11 +295,11 @@ Admins can add custom categories from the Settings page.
 
 ## 📱 Mobile Support
 
-The application is fully responsive:
-- Large touch-friendly buttons and targets
-- Horizontal category scroll tabs on mobile
-- Collapsible sidebar navigation on small screens
-- Mobile-optimized document cards and grids
+The application is fully responsive and optimized for mobile-first workflows:
+- **Bottom Modal Sheets:** Form inputs and options modals transform into native-feeling bottom sheets on smaller viewports.
+- **Dynamic Keyboard Adjustment:** Modal wrappers utilize column-flex structures with scrollable bodies, ensuring form inputs remain accessible and headers/footers stay anchored (`flex-shrink: 0`) when the virtual keyboard is open.
+- **Safety Area Clearance:** Bottom sheet footers integrate `44px` bottom padding overrides coupled with `safe-area-inset-bottom` calculations to ensure buttons are completely accessible above modern iOS/Android swipe indicators and web browser navigation bars.
+- **Touch Targets:** Large, touch-friendly button layouts with horizontal category scroll tabs and mobile-optimized document lists.
 
 ---
 
