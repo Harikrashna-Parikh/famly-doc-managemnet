@@ -1511,7 +1511,7 @@ textarea {
    -------------------------------------------------------------------------- */
 .share-options-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin-top: 8px;
 }
@@ -1537,6 +1537,12 @@ textarea {
 .share-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+.share-btn.file-attach:hover {
+    border-color: #8b5cf6;
+    background-color: rgba(139, 92, 246, 0.08);
+    color: #8b5cf6;
 }
 
 .share-btn.whatsapp:hover {
@@ -1578,4 +1584,146 @@ textarea {
     color: var(--text-muted);
     outline: none;
     text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   15. Mobile & Tablet Responsiveness Enhancements
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    /* Prevent iOS auto-zooming on input focus */
+    input, select, textarea, button {
+        font-size: 16px !important;
+    }
+    
+    /* Header layout for mobile */
+    .app-header {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .header-user-menu {
+        gap: 6px;
+    }
+
+    .user-role-badge {
+        display: none;
+    }
+
+    .user-name {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.85rem;
+    }
+
+    /* Navigation & Tabs horizontal swipe */
+    .category-tabs {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+        scrollbar-width: none;
+    }
+
+    .category-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Document cards touch optimization */
+    .doc-card {
+        padding: 14px;
+    }
+
+    .doc-card-actions {
+        gap: 6px;
+    }
+
+    .doc-card-actions .btn-icon {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Modal responsiveness - mobile bottom sheet style */
+    .modal-dialog {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        max-height: 90vh;
+        animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-footer button,
+    .modal-footer .footer-actions-group {
+        width: 100%;
+        display: flex;
+    }
+
+    .footer-actions-group {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .footer-actions-group button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .share-options-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .share-btn {
+        padding: 14px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-pane {
+        padding: 12px 8px;
+    }
+
+    .stats-bar {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-card {
+        padding: 10px 12px;
+    }
+
+    .brand-text {
+        font-size: 1.05rem;
+    }
+
+    .doc-name {
+        font-size: 0.92rem;
+    }
 }

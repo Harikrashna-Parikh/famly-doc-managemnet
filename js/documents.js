@@ -447,39 +447,57 @@ const documents = {
     },
 
     /**
-     * Share a document by trying mobile native share first, then falling back to custom share modal.
+     * Share a document by trying mobile native file share first, then falling back to custom share modal.
      */
     async shareDocument(docId) {
         const doc = this.allDocs.find(d => d.id === docId);
         if (!doc) return;
 
-        // Try native Web Share API on mobile
-        if (navigator.share && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // Try native Web Share API with actual File object on mobile devices
+        if (navigator.share) {
             try {
-                utils.showToast("Generating secure shareable link...", "info");
+                utils.showToast("Preparing original file for sharing...", "info");
+                
                 const { data, error } = await supabaseClient.storage
                     .from('documents')
                     .createSignedUrl(doc.storage_path, 86400); // 24 hours
 
                 if (error) throw error;
 
-                await navigator.share({
-                    title: doc.name,
-                    text: `Family Locker shared document: ${doc.name}`,
-                    url: data.signedUrl
-                });
-                utils.showToast("Document shared successfully.", "success");
-                return;
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    console.error("Native share failed, falling back to modal:", err);
+                // Fetch blob to convert into a File object for direct attachment
+                const res = await fetch(data.signedUrl);
+                const blob = await res.blob();
+                const mimeType = doc.file_type || blob.type || 'application/octet-stream';
+                const fileName = doc.file_name || doc.name;
+                const file = new File([blob], fileName, { type: mimeType });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: doc.name,
+                        text: `Family Locker document: ${doc.name}`
+                    });
+                    utils.showToast("Document shared successfully.", "success");
+                    return;
                 } else {
-                    return; // User cancelled the native share sheet
+                    // Fall back to link-based native share if file share isn't supported
+                    await navigator.share({
+                        title: doc.name,
+                        text: `Family Locker shared document: ${doc.name}`,
+                        url: data.signedUrl
+                    });
+                    utils.showToast("Document link shared successfully.", "success");
+                    return;
                 }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    return; // User cancelled native share sheet
+                }
+                console.warn("Native share error, falling back to share modal:", err);
             }
         }
 
-        // Fallback to our custom share modal
+        // Fallback to custom share modal
         this.openShareModal(docId);
     },
 
@@ -493,6 +511,7 @@ const documents = {
         const modal = document.getElementById("modal-doc-share");
         const nameEl = document.getElementById("share-doc-name");
         const linkInput = document.getElementById("share-link-input");
+        const shareFileBtn = document.getElementById("share-file-btn");
         const whatsappBtn = document.getElementById("share-whatsapp-btn");
         const emailBtn = document.getElementById("share-email-btn");
         const copyBtn = document.getElementById("share-copy-btn");
@@ -515,6 +534,36 @@ const documents = {
 
             const signedUrl = data.signedUrl;
             if (linkInput) linkInput.value = signedUrl;
+
+            // Wire up Share File button (attaches real file)
+            if (shareFileBtn) {
+                shareFileBtn.onclick = async () => {
+                    try {
+                        utils.showToast("Preparing document file...", "info");
+                        const res = await fetch(signedUrl);
+                        const blob = await res.blob();
+                        const fileName = doc.file_name || doc.name;
+                        const file = new File([blob], fileName, { type: doc.file_type || blob.type });
+
+                        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: doc.name,
+                                text: `Family Locker document: ${doc.name}`
+                            });
+                        } else {
+                            // Direct blob download
+                            this.triggerBlobDownload(blob, fileName);
+                            utils.showToast("Direct file download initiated.", "info");
+                        }
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.error("File attachment share error:", err);
+                            utils.showToast("Could not share file directly.", "warning");
+                        }
+                    }
+                };
+            }
 
             // Wire up WhatsApp sharing
             if (whatsappBtn) {
