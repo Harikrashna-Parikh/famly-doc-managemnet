@@ -12,6 +12,8 @@ A **secure, private, static web application** for organizing and accessing your 
 - 📥 **Advanced Custom Downloads:** In-browser format conversion (JPG, PNG, PDF), aspect-locked dimension scaling, and target-size file compression (10KB - 500KB) using client-side canvas.
 - 🖨️ **Clean Printing & Native Sharing:** Custom print layouts showing only the document image, and native mobile sharing support (Web Share API) for sharing original files directly.
 
+> 📖 **New to the app as a family member?** Read the [👤 Member User Guide](MEMBER_GUIDE.md) for a complete step-by-step walkthrough.
+
 ---
 
 ## ⚠️ Security Warning
