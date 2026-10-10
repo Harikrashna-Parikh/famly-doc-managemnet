@@ -15,9 +15,10 @@ A step-by-step guide for **family members** to register, log in, and use the Fam
 7. [Printing Documents](#7-printing-documents)
 8. [Sharing Documents](#8-sharing-documents)
 9. [Dark Mode / Light Mode](#9-dark-mode--light-mode)
-10. [Forgot Password](#10-forgot-password)
-11. [Logging Out](#11-logging-out)
-12. [Frequently Asked Questions](#12-frequently-asked-questions)
+10. [Managing Profile & Changing Password](#10-managing-profile--changing-password)
+11. [Forgot Password](#11-forgot-password)
+12. [Logging Out](#12-logging-out)
+13. [Frequently Asked Questions](#13-frequently-asked-questions)
 
 ---
 
@@ -213,9 +214,27 @@ The app supports both light and dark themes:
 
 ---
 
-## 10. Forgot Password
+## 10. Managing Profile & Changing Password
 
-If you've forgotten your password:
+You can review your account details and update your password at any time while logged in:
+
+### Opening Your Profile:
+* **On Desktop / Tablet:** Click the **Profile** button in the header, click your name, or click **My Profile** in the sidebar.
+* **On Mobile:** Tap the **Profile** button in the bottom navigation bar or the user icon in the top header.
+
+### Changing Your Password:
+1. Open your Profile modal.
+2. In the **Change Password** section, enter your **New Password** (minimum 6 characters).
+3. Re-enter the same password in **Confirm New Password**.
+4. You can use the eye icon (👁️) to toggle password visibility and verify what you typed.
+5. Tap **Update Password**.
+6. A success message will appear confirming your password has been changed. Your active session remains logged in.
+
+---
+
+## 11. Forgot Password
+
+If you've forgotten your password and cannot log in:
 
 1. Open the app and go to the **Login** tab.
 2. Enter your **email address** in the email field.
@@ -226,7 +245,7 @@ If you've forgotten your password:
 
 ---
 
-## 11. Logging Out
+## 12. Logging Out
 
 1. Tap the **Logout** button in the top-right corner of the header (next to your name and role badge).
 2. You will be immediately signed out and returned to the Login screen.
@@ -234,7 +253,7 @@ If you've forgotten your password:
 
 ---
 
-## 12. Frequently Asked Questions
+## 13. Frequently Asked Questions
 
 ### ❓ I registered but I can't see any document folders.
 Your Admin needs to **grant you access** to specific family member folders. Contact your Admin and ask them to add your email under **Settings → User Access Management**.

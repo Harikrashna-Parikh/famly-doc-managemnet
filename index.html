@@ -84,8 +84,12 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
                 <span class="brand-text">Family Locker</span>
             </div>
             <div class="header-user-menu" id="header-user-menu">
-                <span class="user-name" id="user-display-name">Loading...</span>
+                <span class="user-name" id="user-display-name" title="Click to view profile">Loading...</span>
                 <span class="user-role-badge" id="user-role-badge">Member</span>
+                <button id="btn-open-profile" class="btn btn-outline btn-sm" title="My Profile" style="padding: 6px 10px; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Profile</span>
+                </button>
                 <button id="btn-theme-toggle" class="btn btn-outline btn-sm" title="Toggle theme" style="padding: 6px 10px; display: inline-flex; align-items: center; justify-content: center;">
                     <svg class="icon theme-icon-sun hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     <svg class="icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -119,6 +123,12 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
                             <a href="#/settings" class="nav-item" id="nav-settings">
                                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                                 <span>Settings & Members</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0)" class="nav-item" id="nav-profile">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>My Profile</span>
                             </a>
                         </li>
                     </ul>
@@ -399,6 +409,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
             <button class="nav-tab admin-only hidden" data-route="/settings" id="m-nav-settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09c-.658.003-1.25.396-1.51 1z"></path></svg>
                 <span>Settings</span>
+            </button>
+            <button class="nav-tab" id="m-nav-profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Profile</span>
             </button>
         </nav>
     </div>
@@ -709,6 +723,67 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOi...";</code></pre>
         <button class="btn-close-modal" id="btn-close-fullscreen">❌</button>
         <div class="fullscreen-image-container">
             <img id="fullscreen-image" src="" alt="Fullscreen Document">
+        </div>
+    </div>
+
+    <!-- H. User Profile & Change Password Modal -->
+    <div id="modal-profile" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-wrapper modal-sm">
+            <div class="modal-header">
+                <h2>User Profile</h2>
+                <button class="btn-close-modal" id="btn-close-profile-modal">❌</button>
+            </div>
+            <div class="modal-body">
+                <!-- Profile Information Card -->
+                <div class="profile-card-header" style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--bg-hover); border-radius: var(--radius-md); margin-bottom: 18px; border: 1px solid var(--border-color);">
+                    <div class="profile-avatar" id="profile-modal-avatar" style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; flex-shrink: 0;">
+                        👤
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <h3 id="profile-modal-name" style="margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</h3>
+                        <p id="profile-modal-email" style="margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">user@example.com</p>
+                        <div style="margin-top: 6px;">
+                            <span class="user-role-badge" id="profile-modal-role" style="font-size: 0.72rem; padding: 2px 8px;">Member</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Change Password Form -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                    <h3 style="font-size: 0.92rem; font-weight: 600; margin-bottom: 14px; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+                        <span>🔒</span> Change Password
+                    </h3>
+                    <form id="form-change-password">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="profile-new-password">New Password <span class="required">*</span></label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="profile-new-password" placeholder="Min 6 characters..." required autocomplete="new-password">
+                                <button type="button" class="btn-toggle-password" data-target="profile-new-password" title="Show/Hide password" aria-label="Toggle password visibility">
+                                    <svg class="icon icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <svg class="icon icon-eye-off hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label for="profile-confirm-password">Confirm New Password <span class="required">*</span></label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="profile-confirm-password" placeholder="Re-enter new password..." required autocomplete="new-password">
+                                <button type="button" class="btn-toggle-password" data-target="profile-confirm-password" title="Show/Hide password" aria-label="Toggle password visibility">
+                                    <svg class="icon icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <svg class="icon icon-eye-off hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="padding: 0; margin-top: 14px; border: none; display: flex; justify-content: flex-end; gap: 8px;">
+                            <button type="button" class="btn btn-outline" id="btn-cancel-profile">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="btn-submit-change-password">
+                                <span id="change-pwd-btn-text">Update Password</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 

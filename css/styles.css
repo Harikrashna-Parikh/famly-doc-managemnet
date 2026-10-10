@@ -290,6 +290,12 @@ ul {
 .user-name {
     font-weight: 500;
     font-size: 0.95rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.user-name:hover {
+    color: var(--primary);
 }
 
 .user-role-badge {

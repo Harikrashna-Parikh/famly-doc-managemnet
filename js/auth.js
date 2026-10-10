@@ -136,6 +136,20 @@ const auth = {
     },
 
     /**
+     * Update password for the currently authenticated user.
+     */
+    async updatePassword(newPassword) {
+        if (!supabaseClient) throw new Error("supabaseClient is not initialized.");
+        
+        const { data, error } = await supabaseClient.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) throw error;
+        return data;
+    },
+
+    /**
      * Check if the authenticated user has Admin permissions.
      */
     isAdmin() {

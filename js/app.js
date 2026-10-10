@@ -140,6 +140,50 @@ const app = {
     },
 
     /**
+     * Show the Profile & Change Password Modal.
+     */
+    openProfileModal() {
+        const modal = document.getElementById("modal-profile");
+        if (!modal) return;
+
+        const profile = auth.currentProfile;
+        if (profile) {
+            const nameEl = document.getElementById("profile-modal-name");
+            const emailEl = document.getElementById("profile-modal-email");
+            const roleEl = document.getElementById("profile-modal-role");
+            const avatarEl = document.getElementById("profile-modal-avatar");
+
+            if (nameEl) nameEl.textContent = profile.full_name || profile.email;
+            if (emailEl) emailEl.textContent = profile.email || '';
+            if (roleEl) {
+                roleEl.textContent = profile.role === 'admin' ? '👑 Admin' : '👤 Member';
+                roleEl.style.backgroundColor = profile.role === 'admin' ? '#ede9fe' : '#e0e7ff';
+                roleEl.style.color = profile.role === 'admin' ? '#6d28d9' : '#4338ca';
+            }
+            if (avatarEl) {
+                const initial = (profile.full_name || profile.email || 'U').charAt(0).toUpperCase();
+                avatarEl.textContent = initial;
+            }
+        }
+
+        // Reset change password form inputs and state
+        const form = document.getElementById("form-change-password");
+        if (form) form.reset();
+        const submitBtnText = document.getElementById("change-pwd-btn-text");
+        if (submitBtnText) submitBtnText.textContent = "Update Password";
+
+        modal.classList.remove("hidden");
+    },
+
+    /**
+     * Close the Profile & Change Password Modal.
+     */
+    closeProfileModal() {
+        const modal = document.getElementById("modal-profile");
+        if (modal) modal.classList.add("hidden");
+    },
+
+    /**
      * Bind all global UI events (forms, modals, auth tabs, etc.).
      */
     bindEvents() {
@@ -324,6 +368,57 @@ const app = {
         document.getElementById("btn-download-options-cancel")?.addEventListener('click', () => {
             document.getElementById("modal-doc-download-options")?.classList.add("hidden");
         });
+
+        // ── Profile Modal: Open triggers ──
+        document.getElementById("btn-open-profile")?.addEventListener('click', () => this.openProfileModal());
+        document.getElementById("user-display-name")?.addEventListener('click', () => this.openProfileModal());
+        document.getElementById("nav-profile")?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.openProfileModal();
+        });
+        document.getElementById("m-nav-profile")?.addEventListener('click', () => this.openProfileModal());
+
+        // ── Profile Modal: Close triggers ──
+        document.getElementById("btn-close-profile-modal")?.addEventListener('click', () => this.closeProfileModal());
+        document.getElementById("btn-cancel-profile")?.addEventListener('click', () => this.closeProfileModal());
+        document.querySelector("#modal-profile .modal-backdrop")?.addEventListener('click', () => this.closeProfileModal());
+
+        // ── Profile: Change Password Form ──
+        const changePasswordForm = document.getElementById("form-change-password");
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newPassword = document.getElementById("profile-new-password")?.value || '';
+                const confirmPassword = document.getElementById("profile-confirm-password")?.value || '';
+                const btnText = document.getElementById("change-pwd-btn-text");
+                const submitBtn = document.getElementById("btn-submit-change-password");
+
+                if (newPassword.length < 6) {
+                    utils.showToast("Password must be at least 6 characters.", "warning");
+                    return;
+                }
+                if (newPassword !== confirmPassword) {
+                    utils.showToast("New passwords do not match. Please re-enter.", "warning");
+                    return;
+                }
+
+                if (btnText) btnText.textContent = "Updating...";
+                if (submitBtn) submitBtn.disabled = true;
+
+                try {
+                    await auth.updatePassword(newPassword);
+                    utils.showToast("Password updated successfully!", "success");
+                    this.closeProfileModal();
+                } catch (err) {
+                    console.error("Change password error:", err);
+                    const msg = err.message || "Failed to update password. Please try again.";
+                    utils.showToast(msg, "danger");
+                } finally {
+                    if (btnText) btnText.textContent = "Update Password";
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            });
+        }
 
         // ── Theme Toggle Button ──
         const themeToggleBtn = document.getElementById("btn-theme-toggle");
