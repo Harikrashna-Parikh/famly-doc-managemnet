@@ -3,10 +3,10 @@
    File: js/supabase.js
    ========================================================================== */
 
-// 1. Supabase credentials placeholders
-// Replace these with your actual Supabase URL and Publishable (anon) API Key
-const SUPABASE_URL = "https://ijmnpqzrskmouxvvhdbf.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqbW5wcXpyc2ttb3V4dnZoZGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODgxNjQsImV4cCI6MjEwMTg2NDE2NH0.dKEuFzN-LgTmRWHTIZcA_Mk71wWx_6OFGidOJMHMmkQ";
+// 1. Supabase credentials — injected by GitHub Actions at deploy time.
+// Do NOT hardcode real values here. Add them as GitHub Secrets instead.
+const SUPABASE_URL = "__SUPABASE_URL__";
+const SUPABASE_PUBLISHABLE_KEY = "__SUPABASE_PUBLISHABLE_KEY__";
 
 let supabaseClient = null;
 
@@ -14,8 +14,10 @@ let supabaseClient = null;
 function isSupabaseConfigured() {
     return (
         SUPABASE_URL && 
+        !SUPABASE_URL.startsWith("__") && 
         SUPABASE_URL !== "YOUR_SUPABASE_URL" && 
         SUPABASE_PUBLISHABLE_KEY && 
+        !SUPABASE_PUBLISHABLE_KEY.startsWith("__") && 
         SUPABASE_PUBLISHABLE_KEY !== "YOUR_SUPABASE_PUBLISHABLE_KEY"
     );
 }
